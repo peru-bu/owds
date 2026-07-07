@@ -52,30 +52,56 @@ function cargarDatos() {
       DATA_ACIS = payload.dataAcis || [];
       currentRowsAcis = DATA_ACIS.slice();
 
-      document.getElementById("subtitleText").textContent =
-        "Centro Oriente y Norte · Cierre mensual hasta el " + payload.infoMes.fechaCorteTexto;
-      document.getElementById("fechaGenerado").textContent = payload.fechaTexto;
-      document.getElementById("ultimaCarga").textContent = "Datos cargados: " + payload.ultimaCargaTexto;
-      document.getElementById("antiguedadDatos").textContent = payload.antiguedadDatosTexto;
+      const subtitleOwds = "Cierre mensual hasta el " + payload.infoMes.fechaCorteTexto;
+      const OWDS_PREFIXES = ["", "regionView", "executiveView", "matrizView"];
 
-      document.getElementById("acisSubtitleText").textContent =
-        "Centro Oriente y Norte · Cierre mensual hasta el " + payload.infoMes.fechaCorteTexto;
-      document.getElementById("acisUltimaCarga").textContent = "Última carga: " + payload.ultimaCargaAcisTexto;
-      document.getElementById("acisAntiguedadDatos").textContent = payload.antiguedadDatosAcisTexto;
+      OWDS_PREFIXES.forEach(prefix => {
+        pintarHeroTexto_(prefix, subtitleOwds, payload.fechaTexto, payload.ultimaCargaTexto, payload.antiguedadDatosTexto);
+      });
+
+      const subtitleAcis = subtitleOwds;
+      const ACIS_PREFIXES = ["acis", "regionAcis", "prioridadAcis", "riesgos"];
+
+      ACIS_PREFIXES.forEach(prefix => {
+        pintarHeroTexto_(prefix, subtitleAcis, payload.fechaTexto, payload.ultimaCargaAcisTexto, payload.antiguedadDatosAcisTexto);
+      });
 
       poblarSelect_("regionSelect", payload.regiones, "Todas las regiones");
       poblarSelect_("cdSelect", payload.cds, "Todas las CDs");
+      poblarSelect_("regionViewRegionSelect", payload.regiones, "Todas las regiones");
+      poblarSelect_("regionViewCdSelect", payload.cds, "Todas las CDs");
+      poblarSelect_("executiveViewRegionSelect", payload.regiones, "Todas las regiones");
+      poblarSelect_("executiveViewCdSelect", payload.cds, "Todas las CDs");
+      poblarSelect_("matrizViewRegionSelect", payload.regiones, "Todas las regiones");
+      poblarSelect_("matrizViewCdSelect", payload.cds, "Todas las CDs");
       poblarSelect_("acisRegionSelect", payload.regiones, "Todas las regiones");
       poblarSelect_("acisCdSelect", payload.cds, "Todas las CDs");
+      poblarSelect_("regionAcisRegionSelect", payload.regiones, "Todas las regiones");
+      poblarSelect_("regionAcisCdSelect", payload.cds, "Todas las CDs");
+      poblarSelect_("prioridadAcisRegionSelect", payload.regiones, "Todas las regiones");
+      poblarSelect_("prioridadAcisCdSelect", payload.cds, "Todas las CDs");
+      poblarSelect_("riesgosRegionSelect", payload.regiones, "Todas las regiones");
+      poblarSelect_("riesgosCdSelect", payload.cds, "Todas las CDs");
 
       if (payload.regionDefault) {
         document.getElementById("regionSelect").value = payload.regionDefault;
+        document.getElementById("regionViewRegionSelect").value = payload.regionDefault;
+        document.getElementById("executiveViewRegionSelect").value = payload.regionDefault;
+        document.getElementById("matrizViewRegionSelect").value = payload.regionDefault;
         document.getElementById("acisRegionSelect").value = payload.regionDefault;
+        document.getElementById("regionAcisRegionSelect").value = payload.regionDefault;
+        document.getElementById("prioridadAcisRegionSelect").value = payload.regionDefault;
+        document.getElementById("riesgosRegionSelect").value = payload.regionDefault;
       }
 
-      mountExecutivePanel();
       render();
+      renderRegionView();
+      renderExecutiveView();
+      renderMatrizView();
       renderAcis();
+      renderRegionAcis();
+      renderPrioridadAcis();
+      renderRiesgos();
       ocultarCargando_();
     })
     .catch(err => {
@@ -87,6 +113,18 @@ function cargarDatos() {
 function ocultarCargando_() {
   const overlay = document.getElementById("loadingOverlay");
   if (overlay) overlay.classList.add("hidden");
+}
+
+function pintarHeroTexto_(prefix, subtitle, fechaTexto, ultimaCargaTexto, antiguedadTexto) {
+  const subtitleEl = document.getElementById(prefix ? prefix + "SubtitleText" : "subtitleText");
+  const fechaEl = document.getElementById(prefix ? prefix + "FechaGenerado" : "fechaGenerado");
+  const ultimaCargaEl = document.getElementById(prefix ? prefix + "UltimaCarga" : "ultimaCarga");
+  const antiguedadEl = document.getElementById(prefix ? prefix + "AntiguedadDatos" : "antiguedadDatos");
+
+  if (subtitleEl) subtitleEl.textContent = subtitle;
+  if (fechaEl) fechaEl.textContent = fechaTexto;
+  if (ultimaCargaEl) ultimaCargaEl.textContent = "Datos cargados: " + ultimaCargaTexto;
+  if (antiguedadEl) antiguedadEl.textContent = antiguedadTexto;
 }
 
 function poblarSelect_(id, valores, opcionTodas) {
@@ -112,6 +150,12 @@ function mostrarError_(mensaje) {
   el.textContent = mensaje;
 }
 
+const ACIS_VIEW_IDS = ["acisView", "regionAcisView", "prioridadAcisView", "riesgosView"];
+
+function esVistaAcis_(viewId) {
+  return ACIS_VIEW_IDS.indexOf(viewId) !== -1;
+}
+
 function showView(viewId, button) {
   document.querySelectorAll(".view-panel").forEach(panel => {
     panel.classList.toggle("active", panel.id === viewId);
@@ -121,51 +165,69 @@ function showView(viewId, button) {
     link.classList.toggle("active", link === button);
   });
 
-  // ACIS y OWDS son reportes independientes: el header y los chips de
-  // arriba son específicos de OWDS y no deben verse mientras se está
-  // en una vista de ACIS (ni viceversa, si más adelante ACIS suma más
-  // vistas propias).
-  const esVistaAcis = viewId === "acisView";
-  const owdsHero = document.getElementById("owdsHero");
-  const owdsQuickFilters = document.getElementById("owdsQuickFilters");
-
-  if (owdsHero) owdsHero.style.display = esVistaAcis ? "none" : "";
-  if (owdsQuickFilters) owdsQuickFilters.style.display = esVistaAcis ? "none" : "";
-
   closeSidebar();
 
+  if (viewId === "regionView") {
+    renderRegionView();
+  }
+
   if (viewId === "executiveView") {
-    updateExecutiveSummary(currentRows);
+    renderExecutiveView();
   }
 
   if (viewId === "matrizView") {
-    updateMatriz(currentRows);
+    renderMatrizView();
+  }
+
+  if (viewId === "regionAcisView") {
+    renderRegionAcis();
+  }
+
+  if (viewId === "prioridadAcisView") {
+    renderPrioridadAcis();
+  }
+
+  if (viewId === "riesgosView") {
+    renderRiesgos();
   }
 }
 
 function toggleSidebar() {
   const sidebar = document.getElementById("sidebar");
   const backdrop = document.getElementById("sidebarBackdrop");
+  const toggle = document.getElementById("sidebarToggle");
   const abrir = !sidebar.classList.contains("open");
 
   sidebar.classList.toggle("open", abrir);
   backdrop.classList.toggle("open", abrir);
+  if (toggle) toggle.classList.toggle("hidden", abrir);
 }
 
 function closeSidebar() {
   const sidebar = document.getElementById("sidebar");
   const backdrop = document.getElementById("sidebarBackdrop");
+  const toggle = document.getElementById("sidebarToggle");
 
   sidebar.classList.remove("open");
   backdrop.classList.remove("open");
+  if (toggle) toggle.classList.remove("hidden");
 }
 
-function mountExecutivePanel() {
-  const grid = document.getElementById("executiveGrid");
-  const mount = document.getElementById("executiveMount");
+function selectGroup(grupo) {
+  const esOwds = grupo === "owds";
+  const grupoOwds = document.getElementById("sidebarGroupOwds");
+  const grupoAcis = document.getElementById("sidebarGroupAcis");
 
-  if (grid && mount && grid.parentElement !== mount) {
-    mount.appendChild(grid);
+  grupoOwds.classList.toggle("collapsed", !esOwds);
+  grupoAcis.classList.toggle("collapsed", esOwds);
+
+  const vistaActiva = document.querySelector(".view-panel.active");
+  const vistaActivaEsAcis = vistaActiva ? esVistaAcis_(vistaActiva.id) : false;
+
+  if (esOwds && vistaActivaEsAcis) {
+    showView("collaboratorsView", document.querySelector('.sidebar-link[data-view="collaboratorsView"]'));
+  } else if (!esOwds && !vistaActivaEsAcis) {
+    showView("acisView", document.querySelector('.sidebar-link[data-view="acisView"]'));
   }
 }
 
@@ -188,28 +250,13 @@ function isMobileView() {
   return window.matchMedia && window.matchMedia("(max-width: 1100px)").matches;
 }
 
-function comparePriorityRows(a, b) {
-  const scoreA = getPriorityScore_(getStatus(a).label, a);
-  const scoreB = getPriorityScore_(getStatus(b).label, b);
-
-  if (scoreA !== scoreB) return scoreB - scoreA;
-  return Number(a.calidadPct || 0) - Number(b.calidadPct || 0);
-}
-
 function toggleMobileRow(row) {
   if (!isMobileView()) return;
   row.classList.toggle("expanded");
 }
 
-function render() {
-  const search = document.getElementById("searchInput").value.toLowerCase();
-  const region = document.getElementById("regionSelect").value;
-  const cd = document.getElementById("cdSelect").value;
-  const estado = document.getElementById("estadoSelect").value;
-
-  let filtered = DATA.filter(r => {
-    const status = getStatus(r).label;
-
+function filtrarOwdsPorTexto_(rows, search, region, cd) {
+  return rows.filter(r => {
     const matchSearch =
       String(r.nombre || "").toLowerCase().includes(search) ||
       String(r.cargo || "").toLowerCase().includes(search) ||
@@ -218,39 +265,70 @@ function render() {
 
     const matchRegion = region === "TODAS" || r.region === region;
     const matchCd = cd === "TODAS" || r.cd === cd;
-    const matchEstado = estado === "TODOS" || status === estado;
 
-    return matchSearch && matchRegion && matchCd && matchEstado;
+    return matchSearch && matchRegion && matchCd;
+  });
+}
+
+function render() {
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  const region = document.getElementById("regionSelect").value;
+  const cd = document.getElementById("cdSelect").value;
+  const estado = document.getElementById("estadoSelect").value;
+
+  let filtered = filtrarOwdsPorTexto_(DATA, search, region, cd).filter(r => {
+    const status = getStatus(r).label;
+    return estado === "TODOS" || status === estado;
   });
 
   filtered = filtered.slice().sort((a, b) => Number(b.validas || 0) - Number(a.validas || 0));
 
-  if (isMobileView()) {
-    filtered = filtered.slice().sort(comparePriorityRows);
-  }
-
   currentRows = filtered;
 
   updateQuickFilters(estado);
-  updateKpis(currentRows);
+  pintarOwdsKpis_("", computeOwdsKpis_(currentRows));
   updateTable(currentRows);
-  updateRegionChart(currentRows);
-  updateCdChart(currentRows);
+}
 
-  if (document.getElementById("executiveView").classList.contains("active")) {
-    updateExecutiveSummary(currentRows);
-  }
+function renderOwdsFiltradoPor_(prefix) {
+  const search = document.getElementById(prefix + "SearchInput").value.toLowerCase();
+  const region = document.getElementById(prefix + "RegionSelect").value;
+  const cd = document.getElementById(prefix + "CdSelect").value;
+  const estado = document.getElementById(prefix + "EstadoSelect").value;
 
-  if (document.getElementById("matrizView").classList.contains("active")) {
-    updateMatriz(currentRows);
-  }
+  let filtered = filtrarOwdsPorTexto_(DATA, search, region, cd).filter(r => {
+    const status = getStatus(r).label;
+    return estado === "TODOS" || status === estado;
+  });
+
+  filtered = filtered.slice().sort((a, b) => Number(b.validas || 0) - Number(a.validas || 0));
+
+  pintarOwdsKpis_(prefix, computeOwdsKpis_(filtered));
+
+  return filtered;
+}
+
+function renderRegionView() {
+  const filtered = renderOwdsFiltradoPor_("regionView");
+  updateRegionChart(filtered);
+  updateCdChart(filtered);
+}
+
+function renderExecutiveView() {
+  const filtered = renderOwdsFiltradoPor_("executiveView");
+  updateExecutiveSummary(filtered);
+}
+
+function renderMatrizView() {
+  const filtered = renderOwdsFiltradoPor_("matrizView");
+  updateMatriz(filtered);
 }
 
 function sumField_(rows, field) {
   return rows.reduce((s, r) => s + Number(r[field] || 0), 0);
 }
 
-function updateKpis(rows) {
+function computeOwdsKpis_(rows) {
   const totalLideres = rows.length;
   const totalEjecutadas = sumField_(rows, "ejecutadas");
   const totalValidas = sumField_(rows, "validas");
@@ -263,14 +341,44 @@ function updateKpis(rows) {
   const evaluados = rows.filter(r => Number(r.ejecutadas || 0) > 0).length;
   const sinEjecucion = rows.filter(r => Number(r.ejecutadas || 0) === 0).length;
 
-  document.getElementById("kpiEjecutadas").innerText = totalEjecutadas;
-  document.getElementById("kpiValidas").innerText = totalValidas;
-  document.getElementById("kpiExcedentes").innerText = totalExcedentes;
-  document.getElementById("kpiCalidad").innerText = calidadGlobal + "%";
-  document.getElementById("kpiRepeticion").innerText = totalRepeticion;
-  document.getElementById("kpiEvaluados").innerText = evaluados;
-  document.getElementById("kpiSinEjecucion").innerText = sinEjecucion;
-  document.getElementById("kpiTotalLideres").innerText = totalLideres;
+  return {
+    totalLideres: totalLideres,
+    totalEjecutadas: totalEjecutadas,
+    totalValidas: totalValidas,
+    totalRepeticion: totalRepeticion,
+    totalExcedentes: totalExcedentes,
+    calidadGlobal: calidadGlobal,
+    evaluados: evaluados,
+    sinEjecucion: sinEjecucion
+  };
+}
+
+function getOwdsKpiIds_(prefix) {
+  const base = prefix ? prefix + "Kpi" : "kpi";
+
+  return {
+    ejecutadas: base + "Ejecutadas",
+    validas: base + "Validas",
+    excedentes: base + "Excedentes",
+    calidad: base + "Calidad",
+    repeticion: base + "Repeticion",
+    evaluados: base + "Evaluados",
+    sinEjecucion: base + "SinEjecucion",
+    totalLideres: base + "TotalLideres"
+  };
+}
+
+function pintarOwdsKpis_(prefix, kpis) {
+  const ids = getOwdsKpiIds_(prefix);
+
+  document.getElementById(ids.ejecutadas).innerText = kpis.totalEjecutadas;
+  document.getElementById(ids.validas).innerText = kpis.totalValidas;
+  document.getElementById(ids.excedentes).innerText = kpis.totalExcedentes;
+  document.getElementById(ids.calidad).innerText = kpis.calidadGlobal + "%";
+  document.getElementById(ids.repeticion).innerText = kpis.totalRepeticion;
+  document.getElementById(ids.evaluados).innerText = kpis.evaluados;
+  document.getElementById(ids.sinEjecucion).innerText = kpis.sinEjecucion;
+  document.getElementById(ids.totalLideres).innerText = kpis.totalLideres;
 }
 
 function updateTable(rows) {
@@ -293,23 +401,23 @@ function updateTable(rows) {
       + '<div class="sub mobile-detail">QR: ' + escapeHtml(r.qr || "-") + '</div>'
       + '</td>'
 
-      + '<td data-label="Cargo">' + escapeHtml(r.cargo) + '</td>'
+      + '<td data-label="Cargo" class="mobile-detail">' + escapeHtml(r.cargo) + '</td>'
 
       + '<td data-label="Región">'
       + '<span class="tag">' + escapeHtml(r.region || "Sin región") + '</span>'
       + '</td>'
 
-      + '<td data-label="CD">' + escapeHtml(r.cd) + '</td>'
+      + '<td data-label="CD" class="mobile-detail">' + escapeHtml(r.cd) + '</td>'
 
       + '<td data-label="Ejecutadas" class="num">' + r.ejecutadas + '</td>'
 
       + '<td data-label="Válidas" class="num">' + r.validas + '</td>'
 
-      + '<td data-label="Repetición" class="num">' + r.repeticion + '</td>'
+      + '<td data-label="Repetición" class="num mobile-detail">' + r.repeticion + '</td>'
 
       + '<td data-label="Excedentes" class="num">' + r.excedentes + '</td>'
 
-      + '<td data-label="% Calidad">'
+      + '<td data-label="% Calidad" class="mobile-full">'
       + '<div class="advance-line">'
       + '<strong>' + r.calidadPct + '%</strong>'
       + '</div>'
@@ -680,15 +788,8 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
-function renderAcis() {
-  const search = document.getElementById("acisSearchInput").value.toLowerCase();
-  const region = document.getElementById("acisRegionSelect").value;
-  const cd = document.getElementById("acisCdSelect").value;
-  const estado = document.getElementById("acisEstadoSelect").value;
-
-  let filtered = DATA_ACIS.filter(r => {
-    const status = getStatusAcis(r).label;
-
+function filtrarAcisPorTexto_(rows, search, region, cd) {
+  return rows.filter(r => {
     const matchSearch =
       String(r.nombre || "").toLowerCase().includes(search) ||
       String(r.cargo || "").toLowerCase().includes(search) ||
@@ -697,9 +798,20 @@ function renderAcis() {
 
     const matchRegion = region === "TODAS" || r.region === region;
     const matchCd = cd === "TODAS" || r.cd === cd;
-    const matchEstado = estado === "TODOS" || status === estado;
 
-    return matchSearch && matchRegion && matchCd && matchEstado;
+    return matchSearch && matchRegion && matchCd;
+  });
+}
+
+function renderAcis() {
+  const search = document.getElementById("acisSearchInput").value.toLowerCase();
+  const region = document.getElementById("acisRegionSelect").value;
+  const cd = document.getElementById("acisCdSelect").value;
+  const estado = document.getElementById("acisEstadoSelect").value;
+
+  let filtered = filtrarAcisPorTexto_(DATA_ACIS, search, region, cd).filter(r => {
+    const status = getStatusAcis(r).label;
+    return estado === "TODOS" || status === estado;
   });
 
   filtered = filtered.slice().sort((a, b) => Number(b.reportes || 0) - Number(a.reportes || 0));
@@ -710,7 +822,295 @@ function renderAcis() {
   updateAcisTable(currentRowsAcis);
 }
 
-function updateAcisKpis(rows) {
+function filtrarAcisPorEstado_(rows, estado) {
+  return rows.filter(r => {
+    const status = getStatusAcis(r).label;
+    return estado === "TODOS" || status === estado;
+  });
+}
+
+function renderRegionAcis() {
+  const search = document.getElementById("regionAcisSearchInput").value.toLowerCase();
+  const region = document.getElementById("regionAcisRegionSelect").value;
+  const cd = document.getElementById("regionAcisCdSelect").value;
+  const estado = document.getElementById("regionAcisEstadoSelect").value;
+
+  const filtered = filtrarAcisPorEstado_(filtrarAcisPorTexto_(DATA_ACIS, search, region, cd), estado);
+
+  pintarAcisKpis_("regionAcis", computeAcisKpis_(filtered));
+  updateAcisRegionChart(filtered);
+  updateAcisCdChart(filtered);
+}
+
+function renderPrioridadAcis() {
+  const search = document.getElementById("prioridadAcisSearchInput").value.toLowerCase();
+  const region = document.getElementById("prioridadAcisRegionSelect").value;
+  const cd = document.getElementById("prioridadAcisCdSelect").value;
+  const estado = document.getElementById("prioridadAcisEstadoSelect").value;
+
+  const filtered = filtrarAcisPorEstado_(filtrarAcisPorTexto_(DATA_ACIS, search, region, cd), estado);
+
+  pintarAcisKpis_("prioridadAcis", computeAcisKpis_(filtered));
+  updateAcisPrioritySummary(filtered);
+}
+
+function getAvanceEsperadoGlobal_(rows) {
+  return rows.length ? Number(rows[0].avanceEsperado || 0) : 0;
+}
+
+function getAcisGroupSummary_(rows, field, fallback) {
+  const grouped = {};
+
+  rows.forEach(r => {
+    const key = r[field] || fallback;
+
+    if (!grouped[key]) {
+      grouped[key] = {
+        [field]: key,
+        lideres: 0,
+        reportes: 0,
+        meta: 0,
+        sinReporte: 0,
+        enRiesgo: 0
+      };
+    }
+
+    grouped[key].lideres += 1;
+    grouped[key].reportes += Number(r.reportes || 0);
+    grouped[key].meta += Number(r.meta || 0);
+    if (!Number(r.reportes || 0)) grouped[key].sinReporte += 1;
+
+    const label = getStatusAcis(r).label;
+    if (label === "EN RIESGO" || label === "CIERRE HOY") grouped[key].enRiesgo += 1;
+  });
+
+  return Object.values(grouped).map(r => {
+    r.avance = r.meta > 0 ? Math.round((r.reportes / r.meta) * 100) : 0;
+    return r;
+  });
+}
+
+function getRegionSummaryAcis(rows) {
+  return getAcisGroupSummary_(rows, "region", "Sin región");
+}
+
+function getCdSummaryAcis(rows) {
+  return getAcisGroupSummary_(rows, "cd", "Sin CD");
+}
+
+function updateAcisGroupChart_(rows, targetId, summaryFn, field) {
+  const chart = document.getElementById(targetId);
+  const resumen = summaryFn(rows).sort((a, b) => {
+    if (a.avance !== b.avance) return a.avance - b.avance;
+    return b.sinReporte - a.sinReporte;
+  });
+
+  if (!resumen.length) {
+    chart.innerHTML = '<div class="empty">No hay datos para graficar</div>';
+    return;
+  }
+
+  const avanceEsperado = getAvanceEsperadoGlobal_(rows);
+
+  chart.innerHTML = resumen.map(function(r) {
+    const width = Math.min(r.avance, 100);
+    const claseColor = getAvanceClassAcis_(r.avance, avanceEsperado, r.reportes);
+    const label = r[field];
+
+    return ''
+      + '<div class="chart-row">'
+      + '<div class="chart-label" title="' + escapeHtml(label) + '">' + escapeHtml(label) + '</div>'
+      + '<div>'
+      + '<div class="chart-track">'
+      + '<div class="chart-bar ' + claseColor + '" style="width:' + width + '%"></div>'
+      + '</div>'
+      + '<div class="sub">'
+      + r.reportes + '/' + r.meta + ' reportes &middot; '
+      + r.lideres + ' líderes &middot; '
+      + r.sinReporte + ' sin reporte &middot; '
+      + r.enRiesgo + ' en riesgo'
+      + '</div>'
+      + '</div>'
+      + '<div class="chart-value">' + r.avance + '%</div>'
+      + '</div>';
+  }).join("");
+}
+
+function updateAcisRegionChart(rows) {
+  updateAcisGroupChart_(rows, "regionAcisChart", getRegionSummaryAcis, "region");
+}
+
+function updateAcisCdChart(rows) {
+  updateAcisGroupChart_(rows, "cdAcisChart", getCdSummaryAcis, "cd");
+}
+
+function updateAcisPrioritySummary(rows) {
+  updateAcisStatusDonut(rows);
+  updateAcisPriorityList(rows);
+  updateAcisRegionBrief(rows);
+  updateAcisCdBrief(rows);
+}
+
+function updateAcisStatusDonut(rows) {
+  const donut = document.getElementById("acisStatusDonut");
+  const legend = document.getElementById("acisStatusLegend");
+  const score = document.getElementById("acisHealthScore");
+  const total = rows.length;
+  const counts = { ok: 0, risk: 0, bad: 0 };
+
+  rows.forEach(r => {
+    const className = getStatusAcis(r).className;
+    counts[className] = (counts[className] || 0) + 1;
+  });
+
+  const health = total > 0 ? Math.round((counts.ok / total) * 100) : 0;
+  const okPct = getPct(counts.ok, total);
+  const riskPct = getPct(counts.risk, total);
+  const endOk = okPct;
+  const endRisk = endOk + riskPct;
+
+  score.innerText = health + "%";
+  donut.style.background =
+    "conic-gradient("
+    + "var(--green) 0 " + endOk + "%,"
+    + "var(--amber) " + endOk + "% " + endRisk + "%,"
+    + "var(--red) " + endRisk + "% 100%"
+    + ")";
+  donut.setAttribute("aria-label", "Salud ACIS " + health + "%");
+
+  legend.innerHTML = ''
+    + getLegendItem("Cerrado / buen ritmo", counts.ok, "good")
+    + getLegendItem("En riesgo", counts.risk, "warn")
+    + getLegendItem("Sin reporte / cierre hoy", counts.bad, "bad");
+}
+
+function getPriorityScoreAcis_(status, row) {
+  if (status === "CIERRE HOY") return 900;
+  if (status === "SIN REPORTE") return 700;
+
+  if (status === "EN RIESGO") {
+    const gap = Number(row.avanceEsperado || 0) - Number(row.avance || 0);
+    return 500 + Math.max(0, gap) * 5;
+  }
+
+  return 0;
+}
+
+function updateAcisPriorityList(rows) {
+  const target = document.getElementById("acisPriorityList");
+  const priority = rows
+    .map(r => {
+      const status = getStatusAcis(r);
+
+      return {
+        row: r,
+        status: status,
+        score: getPriorityScoreAcis_(status.label, r)
+      };
+    })
+    .filter(item => item.status.label !== "CERRADO" && item.status.label !== "BUEN RITMO")
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 6);
+
+  if (!priority.length) {
+    target.innerHTML = '<div class="empty compact">Sin pendientes críticos</div>';
+    return;
+  }
+
+  target.innerHTML = priority.map(item => {
+    const r = item.row;
+    const width = Math.min(Number(r.avance || 0), 100);
+    const detalle = item.status.label === "SIN REPORTE"
+      ? "sin reportes este mes"
+      : item.status.label === "CIERRE HOY"
+        ? "cierra hoy · " + r.avance + "% de avance"
+        : r.reportes + "/" + r.meta + " reportes";
+
+    return ''
+      + '<button class="priority-item" type="button" data-search="' + escapeHtml(r.nombre) + '" onclick="focusSearchAcis(this.dataset.search)">'
+      + '<div>'
+      + '<div class="priority-title">' + escapeHtml(r.nombre) + '</div>'
+      + '<div class="sub">' + escapeHtml(r.region || "Sin región") + ' &middot; ' + detalle + '</div>'
+      + '<div class="mini-track"><div class="mini-fill ' + getAvanceClassAcis_(r.avance, r.avanceEsperado, r.reportes) + '" style="width:' + width + '%"></div></div>'
+      + '</div>'
+      + '<span class="status ' + item.status.className + '">' + item.status.label + '</span>'
+      + '</button>';
+  }).join("");
+}
+
+function updateAcisRegionBrief(rows) {
+  const target = document.getElementById("acisRegionBrief");
+  const avanceEsperado = getAvanceEsperadoGlobal_(rows);
+  const resumen = getRegionSummaryAcis(rows)
+    .sort((a, b) => {
+      if (a.avance !== b.avance) return a.avance - b.avance;
+      return b.sinReporte - a.sinReporte;
+    })
+    .slice(0, 5);
+
+  if (!resumen.length) {
+    target.innerHTML = '<div class="empty compact">Sin regiones para mostrar</div>';
+    return;
+  }
+
+  target.innerHTML = resumen.map(r => {
+    const width = Math.min(r.avance, 100);
+
+    return ''
+      + '<div class="company-brief-row">'
+      + '<div class="company-brief-top">'
+      + '<strong>' + escapeHtml(r.region) + '</strong>'
+      + '<span>' + r.avance + '%</span>'
+      + '</div>'
+      + '<div class="mini-track"><div class="mini-fill ' + getAvanceClassAcis_(r.avance, avanceEsperado, r.reportes) + '" style="width:' + width + '%"></div></div>'
+      + '<div class="sub">' + r.sinReporte + ' sin reporte &middot; ' + r.enRiesgo + ' en riesgo</div>'
+      + '</div>';
+  }).join("");
+}
+
+function updateAcisCdBrief(rows) {
+  const target = document.getElementById("acisCdBrief");
+
+  if (!target) return;
+
+  const avanceEsperado = getAvanceEsperadoGlobal_(rows);
+  const resumen = getCdSummaryAcis(rows)
+    .sort((a, b) => {
+      if (a.avance !== b.avance) return a.avance - b.avance;
+      return b.sinReporte - a.sinReporte;
+    })
+    .slice(0, 5);
+
+  if (!resumen.length) {
+    target.innerHTML = '<div class="empty compact">Sin CDs para mostrar</div>';
+    return;
+  }
+
+  target.innerHTML = resumen.map(r => {
+    const width = Math.min(r.avance, 100);
+
+    return ''
+      + '<div class="company-brief-row">'
+      + '<div class="company-brief-top">'
+      + '<strong>' + escapeHtml(r.cd) + '</strong>'
+      + '<span>' + r.avance + '%</span>'
+      + '</div>'
+      + '<div class="mini-track"><div class="mini-fill ' + getAvanceClassAcis_(r.avance, avanceEsperado, r.reportes) + '" style="width:' + width + '%"></div></div>'
+      + '<div class="sub">' + r.sinReporte + ' sin reporte &middot; ' + r.enRiesgo + ' en riesgo</div>'
+      + '</div>';
+  }).join("");
+}
+
+function focusSearchAcis(value) {
+  showView("acisView", document.querySelector('.sidebar-link[data-view="acisView"]'));
+
+  const input = document.getElementById("acisSearchInput");
+  input.value = value;
+  renderAcis();
+  input.focus();
+}
+
+function computeAcisKpis_(rows) {
   const totalLideres = rows.length;
   const totalReportes = rows.reduce((s, r) => s + Number(r.reportes || 0), 0);
   const totalMeta = rows.reduce((s, r) => s + Number(r.meta || 0), 0);
@@ -732,12 +1132,27 @@ function updateAcisKpis(rows) {
     return label === "EN RIESGO" || label === "SIN REPORTE" || label === "CIERRE HOY";
   }).length;
 
-  document.getElementById("acisKpiReportes").innerText = totalReportes;
-  document.getElementById("acisKpiMeta").innerText = totalMeta;
-  document.getElementById("acisKpiAvance").innerText = avanceGlobal + "%";
-  document.getElementById("acisKpiSinReporte").innerText = sinReporte;
-  document.getElementById("acisKpiRiesgo").innerText = enRiesgo;
-  document.getElementById("acisKpiTotalLideres").innerText = totalLideres;
+  return {
+    totalLideres: totalLideres,
+    totalReportes: totalReportes,
+    totalMeta: totalMeta,
+    avanceGlobal: avanceGlobal,
+    sinReporte: sinReporte,
+    enRiesgo: enRiesgo
+  };
+}
+
+function pintarAcisKpis_(prefijo, kpis) {
+  document.getElementById(prefijo + "KpiReportes").innerText = kpis.totalReportes;
+  document.getElementById(prefijo + "KpiMeta").innerText = kpis.totalMeta;
+  document.getElementById(prefijo + "KpiAvance").innerText = kpis.avanceGlobal + "%";
+  document.getElementById(prefijo + "KpiSinReporte").innerText = kpis.sinReporte;
+  document.getElementById(prefijo + "KpiRiesgo").innerText = kpis.enRiesgo;
+  document.getElementById(prefijo + "KpiTotalLideres").innerText = kpis.totalLideres;
+}
+
+function updateAcisKpis(rows) {
+  pintarAcisKpis_("acis", computeAcisKpis_(rows));
 }
 
 function updateAcisTable(rows) {
@@ -754,19 +1169,19 @@ function updateAcisTable(rows) {
     const barWidth = Math.min(Number(r.avance || 0), 100);
 
     return ''
-      + '<tr>'
-      + '<td><div class="name">' + escapeHtml(r.nombre) + '</div><div class="sub">QR: ' + escapeHtml(r.qr || "-") + '</div></td>'
-      + '<td>' + escapeHtml(r.cargo) + '</td>'
-      + '<td><span class="tag">' + escapeHtml(r.region || "Sin región") + '</span></td>'
-      + '<td>' + escapeHtml(r.cd) + '</td>'
-      + '<td class="num">' + r.reportes + '</td>'
-      + '<td class="num">' + r.meta + '</td>'
-      + '<td>'
+      + '<tr class="detail-row" onclick="toggleMobileRow(this)">'
+      + '<td data-label="Líder"><div class="name">' + escapeHtml(r.nombre) + '</div><div class="sub mobile-detail">QR: ' + escapeHtml(r.qr || "-") + '</div></td>'
+      + '<td data-label="Cargo" class="mobile-detail">' + escapeHtml(r.cargo) + '</td>'
+      + '<td data-label="Región"><span class="tag">' + escapeHtml(r.region || "Sin región") + '</span></td>'
+      + '<td data-label="CD" class="mobile-detail">' + escapeHtml(r.cd) + '</td>'
+      + '<td data-label="Reportes" class="num">' + r.reportes + '</td>'
+      + '<td data-label="Meta" class="num">' + r.meta + '</td>'
+      + '<td data-label="Avance" class="mobile-full">'
       + '<div class="advance-line"><strong>' + r.avance + '%</strong></div>'
       + '<div class="progress"><div class="progress-fill ' + avanceClass + '" style="width:' + barWidth + '%"></div></div>'
       + '<div class="sub">' + r.reportes + '/' + r.meta + ' reportes</div>'
       + '</td>'
-      + '<td><span class="status ' + status.className + '">' + status.label + '</span></td>'
+      + '<td data-label="Estado"><span class="status ' + status.className + '">' + status.label + '</span></td>'
       + '</tr>';
   }).join("");
 }
@@ -807,6 +1222,131 @@ function getAvanceClassAcis_(avance, avanceEsperado, reporte) {
   if (avance >= avanceEsperado - 10) return "mid";
   if (avance >= 40) return "warn";
   return "bad";
+}
+
+function renderRiesgos() {
+  const search = document.getElementById("riesgosSearchInput").value.toLowerCase();
+  const region = document.getElementById("riesgosRegionSelect").value;
+  const cd = document.getElementById("riesgosCdSelect").value;
+  const estado = document.getElementById("riesgosEstadoSelect").value;
+
+  const filtered = filtrarAcisPorEstado_(filtrarAcisPorTexto_(DATA_ACIS, search, region, cd), estado);
+
+  updateRiesgosKpis(filtered);
+  updateRiesgosClasificacionChart(filtered);
+  updateRiesgosRanking(filtered);
+}
+
+function getActoCondicionTotales_(rows) {
+  const totales = {
+    "Acto Inseguro": 0,
+    "Acto Seguro": 0,
+    "Condición Inseguro": 0,
+    "Condición Seguro": 0
+  };
+
+  rows.forEach(r => {
+    const actoCondicion = r.actoCondicion || {};
+
+    Object.keys(actoCondicion).forEach(categoria => {
+      totales[categoria] = (totales[categoria] || 0) + Number(actoCondicion[categoria] || 0);
+    });
+  });
+
+  return totales;
+}
+
+function updateRiesgosKpis(rows) {
+  const totales = getActoCondicionTotales_(rows);
+  const actoInseguro = totales["Acto Inseguro"] || 0;
+  const actoSeguro = totales["Acto Seguro"] || 0;
+  const condicionInsegura = totales["Condición Inseguro"] || 0;
+  const condicionSegura = totales["Condición Seguro"] || 0;
+  const total = actoInseguro + actoSeguro + condicionInsegura + condicionSegura;
+  const pctInseguro = total > 0
+    ? Math.round(((actoInseguro + condicionInsegura) / total) * 100)
+    : 0;
+
+  document.getElementById("riesgosKpiActoInseguro").innerText = actoInseguro;
+  document.getElementById("riesgosKpiActoSeguro").innerText = actoSeguro;
+  document.getElementById("riesgosKpiCondicionInsegura").innerText = condicionInsegura;
+  document.getElementById("riesgosKpiCondicionSegura").innerText = condicionSegura;
+  document.getElementById("riesgosKpiPctInseguro").innerText = pctInseguro + "%";
+  document.getElementById("riesgosKpiTotal").innerText = total;
+}
+
+function updateRiesgosClasificacionChart(rows) {
+  const chart = document.getElementById("riesgosClasificacionChart");
+  const totales = getActoCondicionTotales_(rows);
+  const total = Object.values(totales).reduce((s, v) => s + v, 0);
+
+  const categorias = Object.keys(totales)
+    .map(categoria => ({ categoria: categoria, total: totales[categoria] }))
+    .filter(item => item.total > 0)
+    .sort((a, b) => b.total - a.total);
+
+  if (!categorias.length) {
+    chart.innerHTML = '<div class="empty">No hay datos para graficar</div>';
+    return;
+  }
+
+  chart.innerHTML = categorias.map(item => {
+    const pct = getPct(item.total, total);
+    const esInsegura = item.categoria.indexOf("Inseguro") !== -1;
+    const claseColor = esInsegura ? "bad" : "good";
+
+    return ''
+      + '<div class="chart-row">'
+      + '<div class="chart-label" title="' + escapeHtml(item.categoria) + '">' + escapeHtml(item.categoria) + '</div>'
+      + '<div>'
+      + '<div class="chart-track">'
+      + '<div class="chart-bar ' + claseColor + '" style="width:' + pct + '%"></div>'
+      + '</div>'
+      + '<div class="sub">' + item.total + ' reportes</div>'
+      + '</div>'
+      + '<div class="chart-value">' + pct + '%</div>'
+      + '</div>';
+  }).join("");
+}
+
+function getRiesgosRanking_(rows, limite) {
+  const totales = {};
+
+  rows.forEach(r => {
+    const riesgos = r.riesgos || {};
+
+    Object.keys(riesgos).forEach(tipoRiesgo => {
+      totales[tipoRiesgo] = (totales[tipoRiesgo] || 0) + Number(riesgos[tipoRiesgo] || 0);
+    });
+  });
+
+  const lista = Object.keys(totales)
+    .map(tipoRiesgo => ({ tipoRiesgo: tipoRiesgo, total: totales[tipoRiesgo] }))
+    .sort((a, b) => b.total - a.total);
+
+  return limite ? lista.slice(0, limite) : lista;
+}
+
+function updateRiesgosRanking(rows) {
+  const tbody = document.getElementById("riesgosRankingBody");
+  const ranking = getRiesgosRanking_(rows, 15);
+  const totalGeneral = getRiesgosRanking_(rows).reduce((s, item) => s + item.total, 0);
+
+  if (!ranking.length) {
+    tbody.innerHTML = '<tr><td colspan="3" class="empty">No hay registros con los filtros seleccionados</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = ranking.map(item => {
+    const pct = getPct(item.total, totalGeneral);
+
+    return ''
+      + '<tr>'
+      + '<td><div class="name">' + escapeHtml(item.tipoRiesgo) + '</div></td>'
+      + '<td class="num">' + item.total + '</td>'
+      + '<td class="num">' + pct + '%</td>'
+      + '</tr>';
+  }).join("");
 }
 
 cargarDatos();

@@ -116,15 +116,35 @@
       overflow-y: auto;
     }
 
+    .sidebar-brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 0 10px 16px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
     .sidebar-brand {
       font-size: 13px;
       font-weight: 900;
       letter-spacing: .4px;
       text-transform: uppercase;
       color: var(--muted);
-      padding: 0 10px 16px;
-      margin-bottom: 14px;
-      border-bottom: 1px solid var(--line);
+    }
+
+    .sidebar-brand-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Botón para cerrar el sidebar en móvil, ubicado junto al nombre
+       "Reportes" dentro del propio panel (no superpuesto con el
+       hamburguesa fijo, que se oculta mientras el sidebar está abierto). */
+    .sidebar-close {
+      display: none;
     }
 
     .sidebar-nav {
@@ -133,13 +153,41 @@
     }
 
     .sidebar-group-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      border: none;
+      background: transparent;
       font-size: 11px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: .6px;
       color: var(--gold-text);
-      padding: 0 10px;
+      padding: 8px 10px;
       margin-bottom: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background .15s ease;
+    }
+
+    .sidebar-group-title:hover {
+      background: rgba(var(--tint-rgb), 0.05);
+    }
+
+    .sidebar-group-chevron {
+      font-size: 10px;
+      transition: transform .2s ease;
+    }
+
+    /* Acordeón: solo el grupo activo (OWDS o ACIS) muestra sus vistas;
+       el otro queda colapsado a un solo título hasta que se selecciona. */
+    .sidebar-group.collapsed .sidebar-group-chevron {
+      transform: rotate(-90deg);
+    }
+
+    .sidebar-group.collapsed .sidebar-link {
+      display: none;
     }
 
     .sidebar-link {
@@ -225,12 +273,6 @@
       font-size: 14px;
     }
 
-    .header-actions {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-    }
-
     .theme-toggle {
       width: 38px;
       height: 38px;
@@ -314,18 +356,22 @@
       margin-top: 4px;
     }
 
-    #kpiEjecutadas,
-    #kpiCalidad {
+    /* Por clase (no por id) para que el color aplique en las 4 vistas
+       OWDS (Líderes, Región y agencia, Prioridades, Matriz), cada una
+       con sus propios ids de KPI prefijados pero la misma clase en la
+       tarjeta contenedora. */
+    .kpi-ejecutadas .value,
+    .kpi-calidad .value {
       color: var(--gold-text);
     }
 
-    #kpiExcedentes,
-    #kpiSinEjecucion {
+    .kpi-excedentes .value,
+    .kpi-sin-ejecucion .value {
       color: var(--red-strong);
     }
 
-    #kpiValidas,
-    #kpiEvaluados {
+    .kpi-validas .value,
+    .kpi-evaluados .value {
       color: var(--green-soft);
     }
 
@@ -833,11 +879,13 @@
     /* Overlay de carga: solo lo usa el frontend estático (web/), que
        primero pinta el HTML/CSS al instante y luego pide los datos
        reales por fetch(). Mientras esa respuesta no llega, se cubre
-       la pantalla con esto en vez de mostrar KPIs/tabla vacíos. */
+       la pantalla con esto en vez de mostrar KPIs/tabla vacíos. Debe
+       quedar por encima del sidebar/hamburguesa (z-index 60/61) para
+       que no se vean mientras los datos todavía están cargando. */
     .loading-overlay {
       position: fixed;
       inset: 0;
-      z-index: 50;
+      z-index: 70;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1104,6 +1152,27 @@
     box-shadow: var(--shadow);
   }
 
+  /* Mientras el sidebar está abierto, el hamburguesa fijo se oculta:
+     el botón de cerrar equivalente vive dentro de .sidebar-brand-row,
+     junto a "Reportes", para que nunca queden superpuestos. */
+  .sidebar-toggle.hidden {
+    display: none;
+  }
+
+  .sidebar-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid rgba(245, 197, 66, 0.35);
+    background: rgba(245, 197, 66, 0.12);
+    color: var(--gold-text);
+    font-size: 15px;
+    cursor: pointer;
+  }
+
   .sidebar-backdrop {
     display: block;
     position: fixed;
@@ -1229,7 +1298,8 @@
     margin-bottom: 4px;
   }
 
-  /* Líder ocupa toda la tarjeta */
+  /* Líder ocupa toda la tarjeta (siempre la primera columna, en
+     cualquier tabla .data-table) */
   .data-table tbody td:nth-child(1) {
     grid-column: 1 / -1;
     padding-bottom: 4px;
@@ -1240,22 +1310,20 @@
     display: none;
   }
 
-  .data-table tbody td:nth-child(2),
-  .data-table tbody td:nth-child(4),
-  .data-table tbody td:nth-child(7),
+  /* Columnas secundarias: ocultas hasta expandir la tarjeta. Se marcan
+     por clase (no por posición) para que cualquier tabla .data-table
+     pueda reutilizar el mismo modo tarjeta sin importar cuántas
+     columnas tenga. */
   .data-table tbody .mobile-detail {
     display: none;
   }
 
-  .data-table tbody tr.expanded td:nth-child(2),
-  .data-table tbody tr.expanded td:nth-child(4),
-  .data-table tbody tr.expanded td:nth-child(7),
   .data-table tbody tr.expanded .mobile-detail {
     display: block;
   }
 
-  /* % Calidad ocupa todo el ancho */
-  .data-table tbody td:nth-child(9) {
+  /* Columna destacada (ej. % Calidad, Avance) que ocupa todo el ancho */
+  .data-table tbody td.mobile-full {
     grid-column: 1 / -1;
     padding-top: 4px;
   }
