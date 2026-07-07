@@ -8,6 +8,10 @@
       --gold: #f5c542;
       --gold-soft: #ffe28a;
       --gold-dim: rgba(245, 197, 66, 0.55);
+      /* --gold-soft es para fondos/degradados (se mantiene brillante en
+         ambos temas); --gold-text es la variante usada como color de
+         texto, que sí se oscurece en modo claro para legibilidad. */
+      --gold-text: var(--gold-soft);
 
       --white: #ffffff;
       --steel-soft: rgba(244, 246, 248, 0.72);
@@ -52,7 +56,7 @@
       --line: rgba(154, 108, 0, 0.30);
       --shadow: 0 14px 34px rgba(120, 95, 30, 0.16);
 
-      --gold-soft: #8a6108;
+      --gold-text: #8a6108;
       --green-soft: #157a3d;
       --red-soft: #b91c1c;
       --red-strong: #b91c1c;
@@ -150,7 +154,7 @@
       border-radius: 50%;
       border: 1px solid rgba(245, 197, 66, 0.35);
       background: rgba(245, 197, 66, 0.12);
-      color: var(--gold-soft);
+      color: var(--gold-text);
       font-size: 16px;
       line-height: 1;
       cursor: pointer;
@@ -221,7 +225,7 @@
 
     #kpiEjecutadas,
     #kpiCalidad {
-      color: var(--gold-soft);
+      color: var(--gold-text);
     }
 
     #kpiExcedentes,
@@ -338,7 +342,7 @@
     }
 
     .section-kicker {
-      color: var(--gold-soft);
+      color: var(--gold-text);
       font-size: 11px;
       font-weight: 800;
       text-transform: uppercase;
@@ -348,7 +352,7 @@
     .score-pill {
       border-radius: 999px;
       background: rgba(245, 197, 66, 0.14);
-      color: var(--gold-soft);
+      color: var(--gold-text);
       border: 1px solid rgba(245, 197, 66, 0.35);
       font-weight: 900;
       font-size: 14px;
@@ -480,7 +484,7 @@
     }
 
     .company-brief-top span {
-      color: var(--gold-soft);
+      color: var(--gold-text);
       font-weight: 800;
     }
 
@@ -524,7 +528,7 @@
       position: sticky;
       top: 0;
       background: var(--black-900);
-      color: var(--gold-soft);
+      color: var(--gold-text);
       text-transform: uppercase;
       font-size: 10.5px;
       letter-spacing: .4px;
@@ -587,7 +591,7 @@
       position: sticky;
       top: 0;
       background: var(--black-900);
-      color: var(--gold-soft);
+      color: var(--gold-text);
       z-index: 1;
       font-size: 12px;
       text-transform: uppercase;
@@ -633,7 +637,7 @@
       font-size: 12px;
       font-weight: 700;
       background: rgba(245, 197, 66, 0.14);
-      color: var(--gold-soft);
+      color: var(--gold-text);
     }
 
     .advance-line {
@@ -690,7 +694,7 @@
 
     .status.risk {
       background: rgba(245, 197, 66, 0.16);
-      color: var(--gold-soft);
+      color: var(--gold-text);
       border: 1px solid rgba(245, 197, 66, 0.36);
     }
 
@@ -744,7 +748,7 @@
       text-align: right;
       font-weight: 800;
       font-size: 13px;
-      color: var(--gold-soft);
+      color: var(--gold-text);
     }
 
     .empty {
@@ -808,7 +812,7 @@
     .loading-text {
       font-size: 16px;
       font-weight: 800;
-      color: var(--gold-soft);
+      color: var(--gold-text);
     }
 
     .loading-sub {
@@ -1111,7 +1115,7 @@
     display: block;
     font-size: 10px;
     font-weight: 800;
-    color: var(--gold-soft);
+    color: var(--gold-text);
     text-transform: uppercase;
     letter-spacing: .4px;
     margin-bottom: 4px;
