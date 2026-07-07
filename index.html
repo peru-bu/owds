@@ -90,10 +90,6 @@
         <option value="TODAS">Todas las regiones</option>
       </select>
 
-      <select class="select" id="agenciaSelect" onchange="render()" aria-label="Filtrar por agencia">
-        <option value="TODAS">Todas las agencias</option>
-      </select>
-
       <select class="select" id="cdSelect" onchange="render()" aria-label="Filtrar por CD">
         <option value="TODAS">Todas las CDs</option>
       </select>
@@ -180,6 +176,12 @@
 
     <section class="chart-card">
       <div id="regionChart"></div>
+    </section>
+
+    <div class="section-title">Calidad por CD</div>
+
+    <section class="chart-card">
+      <div id="cdChart"></div>
     </section>
     </section>
 

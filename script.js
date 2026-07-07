@@ -22,7 +22,6 @@ function cargarDatos() {
       document.getElementById("antiguedadDatos").textContent = payload.antiguedadDatosTexto;
 
       poblarSelect_("regionSelect", payload.regiones, "Todas las regiones");
-      poblarSelect_("agenciaSelect", payload.agencias, "Todas las agencias");
       poblarSelect_("cdSelect", payload.cds, "Todas las CDs");
 
       if (payload.regionDefault) {
@@ -132,7 +131,6 @@ function toggleMobileRow(row) {
 function render() {
   const search = document.getElementById("searchInput").value.toLowerCase();
   const region = document.getElementById("regionSelect").value;
-  const agencia = document.getElementById("agenciaSelect").value;
   const cd = document.getElementById("cdSelect").value;
   const estado = document.getElementById("estadoSelect").value;
 
@@ -146,11 +144,10 @@ function render() {
       String(r.qr || "").toLowerCase().includes(search);
 
     const matchRegion = region === "TODAS" || r.region === region;
-    const matchAgencia = agencia === "TODAS" || Object.keys(r.agencias || {}).includes(agencia);
     const matchCd = cd === "TODAS" || r.cd === cd;
     const matchEstado = estado === "TODOS" || status === estado;
 
-    return matchSearch && matchRegion && matchAgencia && matchCd && matchEstado;
+    return matchSearch && matchRegion && matchCd && matchEstado;
   });
 
   if (isMobileView()) {
@@ -163,6 +160,7 @@ function render() {
   updateKpis(currentRows);
   updateTable(currentRows);
   updateRegionChart(currentRows);
+  updateCdChart(currentRows);
 
   if (document.getElementById("executiveView").classList.contains("active")) {
     updateExecutiveSummary(currentRows);
@@ -405,9 +403,9 @@ function updateCdBrief(rows) {
   }).join("");
 }
 
-function updateRegionChart(rows) {
-  const chart = document.getElementById("regionChart");
-  const resumen = getRegionSummary(rows).sort((a, b) => {
+function updateGroupChart_(rows, targetId, summaryFn, field) {
+  const chart = document.getElementById(targetId);
+  const resumen = summaryFn(rows).sort((a, b) => {
     if (a.calidadPct !== b.calidadPct) return a.calidadPct - b.calidadPct;
     return b.excedentes - a.excedentes;
   });
@@ -420,10 +418,11 @@ function updateRegionChart(rows) {
   chart.innerHTML = resumen.map(function(r) {
     const width = Math.min(r.calidadPct, 100);
     const qualityClass = getQualityClass(r);
+    const label = r[field];
 
     return ''
       + '<div class="chart-row">'
-      + '<div class="chart-label" title="' + escapeHtml(r.region) + '">' + escapeHtml(r.region) + '</div>'
+      + '<div class="chart-label" title="' + escapeHtml(label) + '">' + escapeHtml(label) + '</div>'
       + '<div>'
       + '<div class="chart-track">'
       + '<div class="chart-bar ' + qualityClass + '" style="width:' + width + '%"></div>'
@@ -438,6 +437,14 @@ function updateRegionChart(rows) {
       + '<div class="chart-value">' + r.calidadPct + '%</div>'
       + '</div>';
   }).join("");
+}
+
+function updateRegionChart(rows) {
+  updateGroupChart_(rows, "regionChart", getRegionSummary, "region");
+}
+
+function updateCdChart(rows) {
+  updateGroupChart_(rows, "cdChart", getCdSummary, "cd");
 }
 
 function getGroupSummary_(rows, field, fallback) {
