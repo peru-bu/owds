@@ -688,6 +688,15 @@
       font-weight: 700;
     }
 
+    .page-footer {
+      margin-top: 28px;
+      padding: 6px 0 4px;
+      text-align: center;
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+
     @media (max-width: 1150px) {
       .kpis {
         grid-template-columns: repeat(4, 1fr);

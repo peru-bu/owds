@@ -602,3 +602,6 @@ function escapeHtml(value) {
 }
 
 cargarDatos();
+
+const footerYearEl = document.getElementById("footerYear");
+if (footerYearEl) footerYearEl.textContent = new Date().getFullYear();
