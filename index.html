@@ -8,6 +8,14 @@
 </head>
 
 <body>
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-box">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Estamos preparando tu reporte…</div>
+      <div class="loading-sub">Esto puede tardar unos segundos</div>
+    </div>
+  </div>
+
   <div class="page">
     <section class="hero">
       <div class="hero-top">
@@ -16,11 +24,15 @@
           <div class="subtitle" id="subtitleText">Cargando...</div>
         </div>
 
-        <div class="updated">
-          Reporte generado<br>
-          <strong id="fechaGenerado">--</strong>
-          <span id="ultimaCarga">Datos cargados: --</span>
-          <em id="antiguedadDatos"></em>
+        <div class="header-actions">
+          <button type="button" class="theme-toggle" id="themeToggle" onclick="alternarTema()" aria-label="Cambiar tema claro/oscuro">🌙</button>
+
+          <div class="updated">
+            Reporte generado<br>
+            <strong id="fechaGenerado">--</strong>
+            <span id="ultimaCarga">Datos cargados: --</span>
+            <em id="antiguedadDatos"></em>
+          </div>
         </div>
       </div>
 

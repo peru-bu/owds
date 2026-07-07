@@ -3,11 +3,44 @@ const EXEC_URL = "https://script.google.com/macros/s/AKfycbyAqvhpj1EQIGHsPpbEXNP
 let DATA = [];
 let currentRows = [];
 
+function aplicarTema_(tema) {
+  document.documentElement.setAttribute("data-theme", tema);
+
+  const boton = document.getElementById("themeToggle");
+  if (boton) boton.textContent = tema === "light" ? "🌙" : "☀️";
+
+  try {
+    localStorage.setItem("owds-theme", tema);
+  } catch (e) {
+    // Almacenamiento no disponible (modo privado, etc.): el tema simplemente no se recuerda.
+  }
+}
+
+function alternarTema() {
+  const actual = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+  aplicarTema_(actual === "light" ? "dark" : "light");
+}
+
+function inicializarTema_() {
+  let guardado = null;
+
+  try {
+    guardado = localStorage.getItem("owds-theme");
+  } catch (e) {
+    // Sin acceso a almacenamiento: se queda en el tema oscuro por defecto.
+  }
+
+  aplicarTema_(guardado === "light" ? "light" : "dark");
+}
+
+inicializarTema_();
+
 function cargarDatos() {
   fetch(EXEC_URL + "?formato=json")
     .then(resp => resp.json())
     .then(payload => {
       if (!payload.ok) {
+        ocultarCargando_();
         mostrarError_(payload.mensaje || "No hay datos para mostrar");
         return;
       }
@@ -31,10 +64,17 @@ function cargarDatos() {
       mountSharedToolbar();
       mountExecutivePanel();
       render();
+      ocultarCargando_();
     })
     .catch(err => {
+      ocultarCargando_();
       mostrarError_("No se pudo conectar con el reporte: " + err.message);
     });
+}
+
+function ocultarCargando_() {
+  const overlay = document.getElementById("loadingOverlay");
+  if (overlay) overlay.classList.add("hidden");
 }
 
 function poblarSelect_(id, valores, opcionTodas) {
