@@ -2,6 +2,8 @@ const EXEC_URL = "https://script.google.com/macros/s/AKfycbyAqvhpj1EQIGHsPpbEXNP
 
 let DATA = [];
 let currentRows = [];
+let DATA_ACIS = [];
+let currentRowsAcis = [];
 
 function aplicarTema_(tema) {
   document.documentElement.setAttribute("data-theme", tema);
@@ -47,6 +49,8 @@ function cargarDatos() {
 
       DATA = payload.data || [];
       currentRows = DATA.slice();
+      DATA_ACIS = payload.dataAcis || [];
+      currentRowsAcis = DATA_ACIS.slice();
 
       document.getElementById("subtitleText").textContent =
         "Centro Oriente y Norte · Cierre mensual hasta el " + payload.infoMes.fechaCorteTexto;
@@ -54,16 +58,24 @@ function cargarDatos() {
       document.getElementById("ultimaCarga").textContent = "Datos cargados: " + payload.ultimaCargaTexto;
       document.getElementById("antiguedadDatos").textContent = payload.antiguedadDatosTexto;
 
+      document.getElementById("acisSubtitleText").textContent =
+        "Centro Oriente y Norte · Cierre mensual hasta el " + payload.infoMes.fechaCorteTexto;
+      document.getElementById("acisUltimaCarga").textContent = "Última carga: " + payload.ultimaCargaAcisTexto;
+      document.getElementById("acisAntiguedadDatos").textContent = payload.antiguedadDatosAcisTexto;
+
       poblarSelect_("regionSelect", payload.regiones, "Todas las regiones");
       poblarSelect_("cdSelect", payload.cds, "Todas las CDs");
+      poblarSelect_("acisRegionSelect", payload.regiones, "Todas las regiones");
+      poblarSelect_("acisCdSelect", payload.cds, "Todas las CDs");
 
       if (payload.regionDefault) {
         document.getElementById("regionSelect").value = payload.regionDefault;
+        document.getElementById("acisRegionSelect").value = payload.regionDefault;
       }
 
-      mountSharedToolbar();
       mountExecutivePanel();
       render();
+      renderAcis();
       ocultarCargando_();
     })
     .catch(err => {
@@ -105,9 +117,22 @@ function showView(viewId, button) {
     panel.classList.toggle("active", panel.id === viewId);
   });
 
-  document.querySelectorAll(".tab-button").forEach(tab => {
-    tab.classList.toggle("active", tab === button);
+  document.querySelectorAll(".sidebar-link").forEach(link => {
+    link.classList.toggle("active", link === button);
   });
+
+  // ACIS y OWDS son reportes independientes: el header y los chips de
+  // arriba son específicos de OWDS y no deben verse mientras se está
+  // en una vista de ACIS (ni viceversa, si más adelante ACIS suma más
+  // vistas propias).
+  const esVistaAcis = viewId === "acisView";
+  const owdsHero = document.getElementById("owdsHero");
+  const owdsQuickFilters = document.getElementById("owdsQuickFilters");
+
+  if (owdsHero) owdsHero.style.display = esVistaAcis ? "none" : "";
+  if (owdsQuickFilters) owdsQuickFilters.style.display = esVistaAcis ? "none" : "";
+
+  closeSidebar();
 
   if (viewId === "executiveView") {
     updateExecutiveSummary(currentRows);
@@ -118,21 +143,29 @@ function showView(viewId, button) {
   }
 }
 
+function toggleSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const backdrop = document.getElementById("sidebarBackdrop");
+  const abrir = !sidebar.classList.contains("open");
+
+  sidebar.classList.toggle("open", abrir);
+  backdrop.classList.toggle("open", abrir);
+}
+
+function closeSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const backdrop = document.getElementById("sidebarBackdrop");
+
+  sidebar.classList.remove("open");
+  backdrop.classList.remove("open");
+}
+
 function mountExecutivePanel() {
   const grid = document.getElementById("executiveGrid");
   const mount = document.getElementById("executiveMount");
 
   if (grid && mount && grid.parentElement !== mount) {
     mount.appendChild(grid);
-  }
-}
-
-function mountSharedToolbar() {
-  const tabs = document.querySelector(".view-tabs");
-  const toolbar = document.querySelector(".toolbar");
-
-  if (tabs && toolbar && toolbar.previousElementSibling !== tabs) {
-    tabs.insertAdjacentElement("afterend", toolbar);
   }
 }
 
@@ -645,6 +678,135 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function renderAcis() {
+  const search = document.getElementById("acisSearchInput").value.toLowerCase();
+  const region = document.getElementById("acisRegionSelect").value;
+  const cd = document.getElementById("acisCdSelect").value;
+  const estado = document.getElementById("acisEstadoSelect").value;
+
+  let filtered = DATA_ACIS.filter(r => {
+    const status = getStatusAcis(r).label;
+
+    const matchSearch =
+      String(r.nombre || "").toLowerCase().includes(search) ||
+      String(r.cargo || "").toLowerCase().includes(search) ||
+      String(r.region || "").toLowerCase().includes(search) ||
+      String(r.qr || "").toLowerCase().includes(search);
+
+    const matchRegion = region === "TODAS" || r.region === region;
+    const matchCd = cd === "TODAS" || r.cd === cd;
+    const matchEstado = estado === "TODOS" || status === estado;
+
+    return matchSearch && matchRegion && matchCd && matchEstado;
+  });
+
+  filtered = filtered.slice().sort((a, b) => Number(b.reportes || 0) - Number(a.reportes || 0));
+
+  currentRowsAcis = filtered;
+
+  updateAcisKpis(currentRowsAcis);
+  updateAcisTable(currentRowsAcis);
+}
+
+function updateAcisKpis(rows) {
+  const totalLideres = rows.length;
+  const totalReportes = rows.reduce((s, r) => s + Number(r.reportes || 0), 0);
+  const totalMeta = rows.reduce((s, r) => s + Number(r.meta || 0), 0);
+
+  const totalReporteValido = rows.reduce((s, r) => {
+    const meta = Number(r.meta || 0);
+    const reporte = Number(r.reportes || 0);
+    return s + Math.min(reporte, meta);
+  }, 0);
+
+  const avanceGlobal = totalMeta > 0
+    ? Math.round((totalReporteValido / totalMeta) * 100)
+    : 0;
+
+  const sinReporte = rows.filter(r => Number(r.reportes || 0) === 0).length;
+
+  const enRiesgo = rows.filter(r => {
+    const label = getStatusAcis(r).label;
+    return label === "EN RIESGO" || label === "SIN REPORTE" || label === "CIERRE HOY";
+  }).length;
+
+  document.getElementById("acisKpiReportes").innerText = totalReportes;
+  document.getElementById("acisKpiMeta").innerText = totalMeta;
+  document.getElementById("acisKpiAvance").innerText = avanceGlobal + "%";
+  document.getElementById("acisKpiSinReporte").innerText = sinReporte;
+  document.getElementById("acisKpiRiesgo").innerText = enRiesgo;
+  document.getElementById("acisKpiTotalLideres").innerText = totalLideres;
+}
+
+function updateAcisTable(rows) {
+  const tbody = document.getElementById("acisTableBody");
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">No hay registros con los filtros seleccionados</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(function(r) {
+    const status = getStatusAcis(r);
+    const avanceClass = getAvanceClassAcis_(r.avance, r.avanceEsperado, r.reportes);
+    const barWidth = Math.min(Number(r.avance || 0), 100);
+
+    return ''
+      + '<tr>'
+      + '<td><div class="name">' + escapeHtml(r.nombre) + '</div><div class="sub">QR: ' + escapeHtml(r.qr || "-") + '</div></td>'
+      + '<td>' + escapeHtml(r.cargo) + '</td>'
+      + '<td><span class="tag">' + escapeHtml(r.region || "Sin región") + '</span></td>'
+      + '<td>' + escapeHtml(r.cd) + '</td>'
+      + '<td class="num">' + r.reportes + '</td>'
+      + '<td class="num">' + r.meta + '</td>'
+      + '<td>'
+      + '<div class="advance-line"><strong>' + r.avance + '%</strong></div>'
+      + '<div class="progress"><div class="progress-fill ' + avanceClass + '" style="width:' + barWidth + '%"></div></div>'
+      + '<div class="sub">' + r.reportes + '/' + r.meta + ' reportes</div>'
+      + '</td>'
+      + '<td><span class="status ' + status.className + '">' + status.label + '</span></td>'
+      + '</tr>';
+  }).join("");
+}
+
+function getStatusAcis(r) {
+  const avance = Number(r.avance || 0);
+  const reporte = Number(r.reportes || 0);
+  const avanceEsperado = Number(r.avanceEsperado || 0);
+  const diasRestantes = Number(r.diasRestantesMes || 0);
+
+  if (diasRestantes === 0 && avance < 100) {
+    return { label: "CIERRE HOY", className: "bad" };
+  }
+
+  if (reporte === 0) {
+    return { label: "SIN REPORTE", className: "bad" };
+  }
+
+  if (avance >= 100) {
+    return { label: "CERRADO", className: "ok" };
+  }
+
+  if (avance >= avanceEsperado) {
+    return { label: "BUEN RITMO", className: "ok" };
+  }
+
+  return { label: "EN RIESGO", className: "risk" };
+}
+
+function getAvanceClassAcis_(avance, avanceEsperado, reporte) {
+  avance = Number(avance || 0);
+  avanceEsperado = Number(avanceEsperado || 0);
+  reporte = Number(reporte || 0);
+
+  if (reporte === 0) return "bad";
+  if (avance >= 100) return "good";
+  if (avance >= avanceEsperado) return "good";
+  if (avance >= avanceEsperado - 10) return "mid";
+  if (avance >= 40) return "warn";
+  return "bad";
 }
 
 cargarDatos();

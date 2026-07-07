@@ -89,6 +89,90 @@
       transition: background .2s ease, color .2s ease;
     }
 
+    .app-shell {
+      display: flex;
+      align-items: stretch;
+      min-height: 100vh;
+    }
+
+    .sidebar-toggle {
+      display: none;
+    }
+
+    .sidebar-backdrop {
+      display: none;
+    }
+
+    .sidebar {
+      width: 232px;
+      flex: 0 0 auto;
+      background: linear-gradient(180deg, var(--card-grad-a), var(--card-grad-b));
+      border-right: 1px solid var(--line);
+      padding: 22px 14px;
+      position: sticky;
+      top: 0;
+      align-self: flex-start;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sidebar-brand {
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 10px 16px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .sidebar-nav {
+      display: grid;
+      gap: 18px;
+    }
+
+    .sidebar-group-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--gold-text);
+      padding: 0 10px;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-link {
+      display: block;
+      width: 100%;
+      text-align: left;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+      padding: 11px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 2px;
+      transition: background .15s ease, color .15s ease;
+    }
+
+    .sidebar-link:hover {
+      background: rgba(var(--tint-rgb), 0.05);
+      color: var(--text);
+    }
+
+    .sidebar-link.active {
+      background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+      color: #241a00;
+    }
+
+    .main-content {
+      flex: 1;
+      min-width: 0;
+    }
+
     .page {
       max-width: 1360px;
       margin: auto;
@@ -195,6 +279,13 @@
       margin-top: 22px;
     }
 
+    /* La sección ACIS es más chica (6 KPIs, sin el reordenado móvil
+       específico de OWDS), así que usa una grilla flexible propia en
+       vez de forzar las 8 columnas de .kpis. */
+    .acis-kpis {
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+
     .kpi {
       background: linear-gradient(180deg, var(--card-grad-a), var(--card-grad-b));
       border: 1px solid var(--line);
@@ -244,34 +335,6 @@
       gap: 12px;
       align-items: center;
       margin-bottom: 14px;
-    }
-
-    .view-tabs {
-      display: inline-grid;
-      grid-template-columns: repeat(3, minmax(140px, 1fr));
-      gap: 4px;
-      background: rgba(var(--tint-rgb), 0.04);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 4px;
-      margin-bottom: 16px;
-    }
-
-    .tab-button {
-      border: none;
-      border-radius: 10px;
-      background: transparent;
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 900;
-      padding: 10px 14px;
-    }
-
-    .tab-button.active {
-      background: linear-gradient(135deg, var(--gold), var(--gold-soft));
-      color: #241a00;
-      box-shadow: 0 10px 24px rgba(245, 197, 66, 0.22);
     }
 
     .view-panel {
@@ -1014,18 +1077,63 @@
     color: #241a00;
   }
 
-  .view-tabs {
-    width: 100%;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    border-radius: 12px;
-    margin-bottom: 12px;
+  .app-shell {
+    display: block;
   }
 
-  .tab-button {
-    min-height: 42px;
-    font-size: 13px;
-    line-height: 1.15;
-    padding: 9px 8px;
+  .main-content {
+    padding-top: 54px;
+  }
+
+  .sidebar-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 61;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    border: 1px solid rgba(245, 197, 66, 0.35);
+    background: var(--black-950);
+    color: var(--gold-text);
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 55;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease;
+  }
+
+  .sidebar-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 60;
+    width: 78vw;
+    max-width: 300px;
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    box-shadow: var(--shadow);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
   }
 
   .section-title {
@@ -1217,7 +1325,6 @@
 
 @media (max-width: 360px) {
   .toolbar,
-  .view-tabs,
   tbody {
     grid-template-columns: 1fr;
   }
