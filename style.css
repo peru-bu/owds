@@ -1242,7 +1242,11 @@
     overflow: visible;
   }
 
-  .table-wrap {
+  /* Solo el envoltorio de una tabla en modo tarjeta (.data-table) debe
+     dejar de recortar/scrollear: las tarjetas fluyen solas. Las tablas
+     planas (ej. ranking de riesgos) conservan el scroll horizontal del
+     escritorio para no desbordar y romper el layout de la página. */
+  .table-wrap-cards {
     max-height: none;
     overflow: visible;
   }
