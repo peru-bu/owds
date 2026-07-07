@@ -190,6 +190,8 @@ function render() {
     return matchSearch && matchRegion && matchCd && matchEstado;
   });
 
+  filtered = filtered.slice().sort((a, b) => Number(b.validas || 0) - Number(a.validas || 0));
+
   if (isMobileView()) {
     filtered = filtered.slice().sort(comparePriorityRows);
   }
@@ -561,12 +563,16 @@ function updateMatriz(rows) {
     return;
   }
 
-  body.innerHTML = rows.map(r => {
+  const filasConTotal = rows.map(r => {
     const procesosLider = r.procesos || {};
     const total = procesos.reduce((s, p) => s + Number(procesosLider[p] || 0), 0);
+    return { r: r, procesosLider: procesosLider, total: total };
+  }).sort((a, b) => b.total - a.total);
 
+  body.innerHTML = filasConTotal.map(fila => {
+    const r = fila.r;
     const cells = procesos.map(p => {
-      const valor = Number(procesosLider[p] || 0);
+      const valor = Number(fila.procesosLider[p] || 0);
       return '<td>' + (valor || '-') + '</td>';
     }).join('');
 
@@ -574,7 +580,7 @@ function updateMatriz(rows) {
       + '<tr>'
       + '<td><div class="name">' + escapeHtml(r.nombre) + '</div><div class="sub">' + escapeHtml(r.cd || '') + '</div></td>'
       + cells
-      + '<td><strong>' + total + '</strong></td>'
+      + '<td><strong>' + fila.total + '</strong></td>'
       + '</tr>';
   }).join('');
 }
