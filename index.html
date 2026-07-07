@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reporte de Calidad OWDS por Líder</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <h1 class="title">Reporte de Calidad OWDS por Líder</h1>
+          <div class="subtitle" id="subtitleText">Cargando...</div>
+        </div>
+
+        <div class="updated">
+          Reporte generado<br>
+          <strong id="fechaGenerado">--</strong>
+          <span id="ultimaCarga">Datos cargados: --</span>
+          <em id="antiguedadDatos"></em>
+        </div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi kpi-priority kpi-ejecutadas">
+          <div class="label">OWDS ejecutadas</div>
+          <div class="value" id="kpiEjecutadas">0</div>
+        </div>
+
+        <div class="kpi kpi-secondary kpi-validas">
+          <div class="label">OWDS válidas</div>
+          <div class="value" id="kpiValidas">0</div>
+        </div>
+
+        <div class="kpi kpi-priority kpi-excedentes">
+          <div class="label">Excedentes</div>
+          <div class="value" id="kpiExcedentes">0</div>
+        </div>
+
+        <div class="kpi kpi-priority kpi-calidad">
+          <div class="label">% Calidad</div>
+          <div class="value" id="kpiCalidad">0%</div>
+        </div>
+
+        <div class="kpi kpi-secondary kpi-repeticion">
+          <div class="label">Repetición permitida</div>
+          <div class="value" id="kpiRepeticion">0</div>
+        </div>
+
+        <div class="kpi kpi-secondary kpi-evaluados">
+          <div class="label">Líderes evaluados</div>
+          <div class="value" id="kpiEvaluados">0</div>
+        </div>
+
+        <div class="kpi kpi-priority kpi-sin-ejecucion">
+          <div class="label">Sin ejecución</div>
+          <div class="value" id="kpiSinEjecucion">0</div>
+        </div>
+
+        <div class="kpi kpi-secondary kpi-total">
+          <div class="label">Total líderes</div>
+          <div class="value" id="kpiTotalLideres">0</div>
+        </div>
+      </div>
+    </section>
+
+    <div id="loadError" class="empty" style="display:none; margin-bottom:16px;"></div>
+
+    <nav class="view-tabs" aria-label="Vistas del reporte">
+      <button class="tab-button active" type="button" data-view="collaboratorsView" onclick="showView('collaboratorsView', this)">Líderes y regiones</button>
+      <button class="tab-button" type="button" data-view="executiveView" onclick="showView('executiveView', this)">Cumplimiento ejecutivo</button>
+      <button class="tab-button" type="button" data-view="matrizView" onclick="showView('matrizView', this)">Matriz proceso</button>
+    </nav>
+
+    <div class="quick-filters" aria-label="Filtros rápidos por estado">
+      <button class="quick-chip active" type="button" data-estado="TODOS" onclick="setQuickEstado('TODOS')">Todos</button>
+      <button class="quick-chip" type="button" data-estado="SIN EJECUCION" onclick="setQuickEstado('SIN EJECUCION')">Sin ejecución</button>
+      <button class="quick-chip" type="button" data-estado="CON EXCEDENTES" onclick="setQuickEstado('CON EXCEDENTES')">Con excedentes</button>
+      <button class="quick-chip" type="button" data-estado="CORRECTO" onclick="setQuickEstado('CORRECTO')">Correcto</button>
+    </div>
+
+    <section class="view-panel active" id="collaboratorsView">
+    <div class="toolbar">
+      <input class="search" id="searchInput" oninput="render()" aria-label="Buscar líder" placeholder="Buscar por nombre, cargo, región o QR...">
+
+      <select class="select" id="regionSelect" onchange="render()" aria-label="Filtrar por región">
+        <option value="TODAS">Todas las regiones</option>
+      </select>
+
+      <select class="select" id="agenciaSelect" onchange="render()" aria-label="Filtrar por agencia">
+        <option value="TODAS">Todas las agencias</option>
+      </select>
+
+      <select class="select" id="cdSelect" onchange="render()" aria-label="Filtrar por CD">
+        <option value="TODAS">Todas las CDs</option>
+      </select>
+
+      <select class="select" id="estadoSelect" onchange="render()" aria-label="Filtrar por estado de calidad">
+        <option value="TODOS">Todos los estados</option>
+        <option value="CORRECTO">Correcto</option>
+        <option value="CON EXCEDENTES">Con excedentes</option>
+        <option value="SIN EJECUCION">Sin ejecución</option>
+      </select>
+    </div>
+
+    <section class="executive-grid" id="executiveGrid">
+      <article class="insight-card">
+        <div class="insight-head">
+          <div>
+            <div class="section-kicker">Salud mensual</div>
+            <h2>Estado de calidad OWDS</h2>
+          </div>
+          <div class="score-pill" id="healthScore">0%</div>
+        </div>
+        <div class="donut-row">
+          <div class="donut" id="statusDonut"></div>
+          <div class="legend" id="statusLegend"></div>
+        </div>
+      </article>
+
+      <article class="insight-card">
+        <div class="insight-head">
+          <div>
+            <div class="section-kicker">Atención</div>
+            <h2>Prioridad por líder</h2>
+          </div>
+        </div>
+        <div class="priority-list" id="priorityList"></div>
+      </article>
+
+      <article class="insight-card">
+        <div class="insight-head">
+          <div>
+            <div class="section-kicker">Regiones</div>
+            <h2>Calidad y excedentes</h2>
+          </div>
+        </div>
+        <div class="company-brief" id="regionBrief"></div>
+      </article>
+
+      <article class="insight-card">
+        <div class="insight-head">
+          <div>
+            <div class="section-kicker">CDs</div>
+            <h2>Calidad y excedentes</h2>
+          </div>
+        </div>
+        <div class="company-brief" id="cdBrief"></div>
+      </article>
+    </section>
+
+    <div class="section-title">Detalle por líder</div>
+
+    <section class="table-card">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Líder</th>
+              <th>Cargo</th>
+              <th>Región</th>
+              <th>CD</th>
+              <th>Ejecutadas</th>
+              <th>Válidas</th>
+              <th>Repetición</th>
+              <th>Excedentes</th>
+              <th>% Calidad</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="section-title">Calidad por región</div>
+
+    <section class="chart-card">
+      <div id="regionChart"></div>
+    </section>
+    </section>
+
+    <section class="view-panel" id="executiveView">
+      <div id="executiveMount"></div>
+    </section>
+
+    <section class="view-panel" id="matrizView">
+      <div class="section-title">Matriz de procesos por líder (solo OWDS válidas)</div>
+
+      <section class="matrix-card">
+        <div class="matrix-wrap">
+          <table>
+            <thead id="matrizHead"></thead>
+            <tbody id="matrizBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
