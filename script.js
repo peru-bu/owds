@@ -144,6 +144,20 @@ function poblarSelect_(id, valores, opcionTodas) {
   });
 }
 
+function sincronizarCdSelect_(prefix, dataset) {
+  const regionId = prefix ? prefix + "RegionSelect" : "regionSelect";
+  const cdId = prefix ? prefix + "CdSelect" : "cdSelect";
+  const region = document.getElementById(regionId).value;
+  const cdSelect = document.getElementById(cdId);
+  const valorCdActual = cdSelect.value;
+
+  const filasRegion = region === "TODAS" ? dataset : dataset.filter(r => r.region === region);
+  const cds = [...new Set(filasRegion.map(r => r.cd || "Sin CD"))].sort((a, b) => a.localeCompare(b, "es"));
+
+  poblarSelect_(cdId, cds, "Todas las CDs");
+  cdSelect.value = cds.indexOf(valorCdActual) !== -1 ? valorCdActual : "TODAS";
+}
+
 function mostrarError_(mensaje) {
   const el = document.getElementById("loadError");
   el.style.display = "block";
@@ -271,6 +285,8 @@ function filtrarOwdsPorTexto_(rows, search, region, cd) {
 }
 
 function render() {
+  sincronizarCdSelect_("", DATA);
+
   const search = document.getElementById("searchInput").value.toLowerCase();
   const region = document.getElementById("regionSelect").value;
   const cd = document.getElementById("cdSelect").value;
@@ -291,6 +307,8 @@ function render() {
 }
 
 function renderOwdsFiltradoPor_(prefix) {
+  sincronizarCdSelect_(prefix, DATA);
+
   const search = document.getElementById(prefix + "SearchInput").value.toLowerCase();
   const region = document.getElementById(prefix + "RegionSelect").value;
   const cd = document.getElementById(prefix + "CdSelect").value;
@@ -517,7 +535,7 @@ function updatePriorityList(rows) {
       + '<button class="priority-item" type="button" data-search="' + escapeHtml(r.nombre) + '" onclick="focusSearch(this.dataset.search)">'
       + '<div>'
       + '<div class="priority-title">' + escapeHtml(r.nombre) + '</div>'
-      + '<div class="sub">' + escapeHtml(r.region || "Sin región") + ' &middot; ' + detalle + '</div>'
+      + '<div class="sub">' + escapeHtml(r.cd || "Sin CD") + ' &middot; ' + detalle + '</div>'
       + '<div class="mini-track"><div class="mini-fill ' + getQualityClass(r) + '" style="width:' + width + '%"></div></div>'
       + '</div>'
       + '<span class="status ' + item.status.className + '">' + item.status.label + '</span>'
@@ -804,6 +822,8 @@ function filtrarAcisPorTexto_(rows, search, region, cd) {
 }
 
 function renderAcis() {
+  sincronizarCdSelect_("acis", DATA_ACIS);
+
   const search = document.getElementById("acisSearchInput").value.toLowerCase();
   const region = document.getElementById("acisRegionSelect").value;
   const cd = document.getElementById("acisCdSelect").value;
@@ -830,6 +850,8 @@ function filtrarAcisPorEstado_(rows, estado) {
 }
 
 function renderRegionAcis() {
+  sincronizarCdSelect_("regionAcis", DATA_ACIS);
+
   const search = document.getElementById("regionAcisSearchInput").value.toLowerCase();
   const region = document.getElementById("regionAcisRegionSelect").value;
   const cd = document.getElementById("regionAcisCdSelect").value;
@@ -843,6 +865,8 @@ function renderRegionAcis() {
 }
 
 function renderPrioridadAcis() {
+  sincronizarCdSelect_("prioridadAcis", DATA_ACIS);
+
   const search = document.getElementById("prioridadAcisSearchInput").value.toLowerCase();
   const region = document.getElementById("prioridadAcisRegionSelect").value;
   const cd = document.getElementById("prioridadAcisCdSelect").value;
@@ -1030,7 +1054,7 @@ function updateAcisPriorityList(rows) {
       + '<button class="priority-item" type="button" data-search="' + escapeHtml(r.nombre) + '" onclick="focusSearchAcis(this.dataset.search)">'
       + '<div>'
       + '<div class="priority-title">' + escapeHtml(r.nombre) + '</div>'
-      + '<div class="sub">' + escapeHtml(r.region || "Sin región") + ' &middot; ' + detalle + '</div>'
+      + '<div class="sub">' + escapeHtml(r.cd || "Sin CD") + ' &middot; ' + detalle + '</div>'
       + '<div class="mini-track"><div class="mini-fill ' + getAvanceClassAcis_(r.avance, r.avanceEsperado, r.reportes) + '" style="width:' + width + '%"></div></div>'
       + '</div>'
       + '<span class="status ' + item.status.className + '">' + item.status.label + '</span>'
@@ -1225,6 +1249,8 @@ function getAvanceClassAcis_(avance, avanceEsperado, reporte) {
 }
 
 function renderRiesgos() {
+  sincronizarCdSelect_("riesgos", DATA_ACIS);
+
   const search = document.getElementById("riesgosSearchInput").value.toLowerCase();
   const region = document.getElementById("riesgosRegionSelect").value;
   const cd = document.getElementById("riesgosCdSelect").value;
