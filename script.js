@@ -67,21 +67,21 @@ function cargarDatos() {
       });
 
       poblarSelect_("regionSelect", payload.regiones, "Todas las regiones");
-      poblarSelect_("cdSelect", payload.cds, "Todas las CDs");
+      poblarSelect_("agenciaSelect", payload.agencias, "Todas las agencias");
       poblarSelect_("regionViewRegionSelect", payload.regiones, "Todas las regiones");
-      poblarSelect_("regionViewCdSelect", payload.cds, "Todas las CDs");
+      poblarSelect_("regionViewAgenciaSelect", payload.agencias, "Todas las agencias");
       poblarSelect_("executiveViewRegionSelect", payload.regiones, "Todas las regiones");
-      poblarSelect_("executiveViewCdSelect", payload.cds, "Todas las CDs");
+      poblarSelect_("executiveViewAgenciaSelect", payload.agencias, "Todas las agencias");
       poblarSelect_("matrizViewRegionSelect", payload.regiones, "Todas las regiones");
-      poblarSelect_("matrizViewCdSelect", payload.cds, "Todas las CDs");
+      poblarSelect_("matrizViewAgenciaSelect", payload.agencias, "Todas las agencias");
       poblarSelect_("acisRegionSelect", payload.regiones, "Todas las regiones");
-      poblarSelect_("acisCdSelect", payload.cds, "Todas las CDs");
+      poblarSelect_("acisAgenciaSelect", payload.agencias, "Todas las agencias");
       poblarSelect_("regionAcisRegionSelect", payload.regiones, "Todas las regiones");
-      poblarSelect_("regionAcisCdSelect", payload.cds, "Todas las CDs");
+      poblarSelect_("regionAcisAgenciaSelect", payload.agencias, "Todas las agencias");
       poblarSelect_("prioridadAcisRegionSelect", payload.regiones, "Todas las regiones");
-      poblarSelect_("prioridadAcisCdSelect", payload.cds, "Todas las CDs");
+      poblarSelect_("prioridadAcisAgenciaSelect", payload.agencias, "Todas las agencias");
       poblarSelect_("riesgosRegionSelect", payload.regiones, "Todas las regiones");
-      poblarSelect_("riesgosCdSelect", payload.cds, "Todas las CDs");
+      poblarSelect_("riesgosAgenciaSelect", payload.agencias, "Todas las agencias");
 
       if (payload.regionDefault) {
         document.getElementById("regionSelect").value = payload.regionDefault;
@@ -144,18 +144,18 @@ function poblarSelect_(id, valores, opcionTodas) {
   });
 }
 
-function sincronizarCdSelect_(prefix, dataset) {
+function sincronizarAgenciaSelect_(prefix, dataset) {
   const regionId = prefix ? prefix + "RegionSelect" : "regionSelect";
-  const cdId = prefix ? prefix + "CdSelect" : "cdSelect";
+  const agenciaId = prefix ? prefix + "AgenciaSelect" : "agenciaSelect";
   const region = document.getElementById(regionId).value;
-  const cdSelect = document.getElementById(cdId);
-  const valorCdActual = cdSelect.value;
+  const agenciaSelect = document.getElementById(agenciaId);
+  const valorAgenciaActual = agenciaSelect.value;
 
   const filasRegion = region === "TODAS" ? dataset : dataset.filter(r => r.region === region);
-  const cds = [...new Set(filasRegion.map(r => r.cd || "Sin CD"))].sort((a, b) => a.localeCompare(b, "es"));
+  const agencias = [...new Set(filasRegion.map(r => r.agencia || "Sin agencia"))].sort((a, b) => a.localeCompare(b, "es"));
 
-  poblarSelect_(cdId, cds, "Todas las CDs");
-  cdSelect.value = cds.indexOf(valorCdActual) !== -1 ? valorCdActual : "TODAS";
+  poblarSelect_(agenciaId, agencias, "Todas las agencias");
+  agenciaSelect.value = agencias.indexOf(valorAgenciaActual) !== -1 ? valorAgenciaActual : "TODAS";
 }
 
 function mostrarError_(mensaje) {
@@ -269,7 +269,7 @@ function toggleMobileRow(row) {
   row.classList.toggle("expanded");
 }
 
-function filtrarOwdsPorTexto_(rows, search, region, cd) {
+function filtrarOwdsPorTexto_(rows, search, region, agencia) {
   return rows.filter(r => {
     const matchSearch =
       String(r.nombre || "").toLowerCase().includes(search) ||
@@ -278,21 +278,21 @@ function filtrarOwdsPorTexto_(rows, search, region, cd) {
       String(r.qr || "").toLowerCase().includes(search);
 
     const matchRegion = region === "TODAS" || r.region === region;
-    const matchCd = cd === "TODAS" || r.cd === cd;
+    const matchAgencia = agencia === "TODAS" || r.agencia === agencia;
 
-    return matchSearch && matchRegion && matchCd;
+    return matchSearch && matchRegion && matchAgencia;
   });
 }
 
 function render() {
-  sincronizarCdSelect_("", DATA);
+  sincronizarAgenciaSelect_("", DATA);
 
   const search = document.getElementById("searchInput").value.toLowerCase();
   const region = document.getElementById("regionSelect").value;
-  const cd = document.getElementById("cdSelect").value;
+  const agencia = document.getElementById("agenciaSelect").value;
   const estado = document.getElementById("estadoSelect").value;
 
-  let filtered = filtrarOwdsPorTexto_(DATA, search, region, cd).filter(r => {
+  let filtered = filtrarOwdsPorTexto_(DATA, search, region, agencia).filter(r => {
     const status = getStatus(r).label;
     return estado === "TODOS" || status === estado;
   });
@@ -307,14 +307,14 @@ function render() {
 }
 
 function renderOwdsFiltradoPor_(prefix) {
-  sincronizarCdSelect_(prefix, DATA);
+  sincronizarAgenciaSelect_(prefix, DATA);
 
   const search = document.getElementById(prefix + "SearchInput").value.toLowerCase();
   const region = document.getElementById(prefix + "RegionSelect").value;
-  const cd = document.getElementById(prefix + "CdSelect").value;
+  const agencia = document.getElementById(prefix + "AgenciaSelect").value;
   const estado = document.getElementById(prefix + "EstadoSelect").value;
 
-  let filtered = filtrarOwdsPorTexto_(DATA, search, region, cd).filter(r => {
+  let filtered = filtrarOwdsPorTexto_(DATA, search, region, agencia).filter(r => {
     const status = getStatus(r).label;
     return estado === "TODOS" || status === estado;
   });
@@ -329,7 +329,7 @@ function renderOwdsFiltradoPor_(prefix) {
 function renderRegionView() {
   const filtered = renderOwdsFiltradoPor_("regionView");
   updateRegionChart(filtered);
-  updateCdChart(filtered);
+  updateAgenciaChart(filtered);
 }
 
 function renderExecutiveView() {
@@ -425,7 +425,7 @@ function updateTable(rows) {
       + '<span class="tag">' + escapeHtml(r.region || "Sin región") + '</span>'
       + '</td>'
 
-      + '<td data-label="CD">' + escapeHtml(r.cd) + '</td>'
+      + '<td data-label="Agencia">' + escapeHtml(r.agencia) + '</td>'
 
       + '<td data-label="Ejecutadas" class="num">' + r.ejecutadas + '</td>'
 
@@ -457,7 +457,7 @@ function updateExecutiveSummary(rows) {
   updateStatusDonut(rows);
   updatePriorityList(rows);
   updateRegionBrief(rows);
-  updateCdBrief(rows);
+  updateAgenciaBrief(rows);
 }
 
 function updateStatusDonut(rows) {
@@ -535,7 +535,7 @@ function updatePriorityList(rows) {
       + '<button class="priority-item" type="button" data-search="' + escapeHtml(r.nombre) + '" onclick="focusSearch(this.dataset.search)">'
       + '<div>'
       + '<div class="priority-title">' + escapeHtml(r.nombre) + '</div>'
-      + '<div class="sub">' + escapeHtml(r.cd || "Sin CD") + ' &middot; ' + detalle + '</div>'
+      + '<div class="sub">' + escapeHtml(r.agencia || "Sin agencia") + ' &middot; ' + detalle + '</div>'
       + '<div class="mini-track"><div class="mini-fill ' + getQualityClass(r) + '" style="width:' + width + '%"></div></div>'
       + '</div>'
       + '<span class="status ' + item.status.className + '">' + item.status.label + '</span>'
@@ -572,12 +572,12 @@ function updateRegionBrief(rows) {
   }).join("");
 }
 
-function updateCdBrief(rows) {
-  const target = document.getElementById("cdBrief");
+function updateAgenciaBrief(rows) {
+  const target = document.getElementById("agenciaBrief");
 
   if (!target) return;
 
-  const resumen = getCdSummary(rows)
+  const resumen = getAgenciaSummary(rows)
     .sort((a, b) => {
       if (a.excedentes !== b.excedentes) return b.excedentes - a.excedentes;
       return a.calidadPct - b.calidadPct;
@@ -585,7 +585,7 @@ function updateCdBrief(rows) {
     .slice(0, 5);
 
   if (!resumen.length) {
-    target.innerHTML = '<div class="empty compact">Sin CDs para mostrar</div>';
+    target.innerHTML = '<div class="empty compact">Sin agencias para mostrar</div>';
     return;
   }
 
@@ -595,7 +595,7 @@ function updateCdBrief(rows) {
     return ''
       + '<div class="company-brief-row">'
       + '<div class="company-brief-top">'
-      + '<strong>' + escapeHtml(r.cd) + '</strong>'
+      + '<strong>' + escapeHtml(r.agencia) + '</strong>'
       + '<span>' + r.calidadPct + '%</span>'
       + '</div>'
       + '<div class="mini-track"><div class="mini-fill ' + getQualityClass(r) + '" style="width:' + width + '%"></div></div>'
@@ -644,8 +644,8 @@ function updateRegionChart(rows) {
   updateGroupChart_(rows, "regionChart", getRegionSummary, "region");
 }
 
-function updateCdChart(rows) {
-  updateGroupChart_(rows, "cdChart", getCdSummary, "cd");
+function updateAgenciaChart(rows) {
+  updateGroupChart_(rows, "agenciaChart", getAgenciaSummary, "agencia");
 }
 
 function getGroupSummary_(rows, field, fallback) {
@@ -687,8 +687,8 @@ function getRegionSummary(rows) {
   return getGroupSummary_(rows, "region", "Sin región");
 }
 
-function getCdSummary(rows) {
-  return getGroupSummary_(rows, "cd", "Sin CD");
+function getAgenciaSummary(rows) {
+  return getGroupSummary_(rows, "agencia", "Sin agencia");
 }
 
 function getAllProcesos_() {
@@ -737,7 +737,7 @@ function updateMatriz(rows) {
 
     return ''
       + '<tr>'
-      + '<td><div class="name">' + escapeHtml(r.nombre) + '</div><div class="sub">' + escapeHtml(r.cd || '') + '</div></td>'
+      + '<td><div class="name">' + escapeHtml(r.nombre) + '</div><div class="sub">' + escapeHtml(r.agencia || '') + '</div></td>'
       + cells
       + '<td><strong>' + fila.total + '</strong></td>'
       + '</tr>';
@@ -806,7 +806,7 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
-function filtrarAcisPorTexto_(rows, search, region, cd) {
+function filtrarAcisPorTexto_(rows, search, region, agencia) {
   return rows.filter(r => {
     const matchSearch =
       String(r.nombre || "").toLowerCase().includes(search) ||
@@ -815,21 +815,21 @@ function filtrarAcisPorTexto_(rows, search, region, cd) {
       String(r.qr || "").toLowerCase().includes(search);
 
     const matchRegion = region === "TODAS" || r.region === region;
-    const matchCd = cd === "TODAS" || r.cd === cd;
+    const matchAgencia = agencia === "TODAS" || r.agencia === agencia;
 
-    return matchSearch && matchRegion && matchCd;
+    return matchSearch && matchRegion && matchAgencia;
   });
 }
 
 function renderAcis() {
-  sincronizarCdSelect_("acis", DATA_ACIS);
+  sincronizarAgenciaSelect_("acis", DATA_ACIS);
 
   const search = document.getElementById("acisSearchInput").value.toLowerCase();
   const region = document.getElementById("acisRegionSelect").value;
-  const cd = document.getElementById("acisCdSelect").value;
+  const agencia = document.getElementById("acisAgenciaSelect").value;
   const estado = document.getElementById("acisEstadoSelect").value;
 
-  let filtered = filtrarAcisPorTexto_(DATA_ACIS, search, region, cd).filter(r => {
+  let filtered = filtrarAcisPorTexto_(DATA_ACIS, search, region, agencia).filter(r => {
     const status = getStatusAcis(r).label;
     return estado === "TODOS" || status === estado;
   });
@@ -850,29 +850,29 @@ function filtrarAcisPorEstado_(rows, estado) {
 }
 
 function renderRegionAcis() {
-  sincronizarCdSelect_("regionAcis", DATA_ACIS);
+  sincronizarAgenciaSelect_("regionAcis", DATA_ACIS);
 
   const search = document.getElementById("regionAcisSearchInput").value.toLowerCase();
   const region = document.getElementById("regionAcisRegionSelect").value;
-  const cd = document.getElementById("regionAcisCdSelect").value;
+  const agencia = document.getElementById("regionAcisAgenciaSelect").value;
   const estado = document.getElementById("regionAcisEstadoSelect").value;
 
-  const filtered = filtrarAcisPorEstado_(filtrarAcisPorTexto_(DATA_ACIS, search, region, cd), estado);
+  const filtered = filtrarAcisPorEstado_(filtrarAcisPorTexto_(DATA_ACIS, search, region, agencia), estado);
 
   pintarAcisKpis_("regionAcis", computeAcisKpis_(filtered));
   updateAcisRegionChart(filtered);
-  updateAcisCdChart(filtered);
+  updateAcisAgenciaChart(filtered);
 }
 
 function renderPrioridadAcis() {
-  sincronizarCdSelect_("prioridadAcis", DATA_ACIS);
+  sincronizarAgenciaSelect_("prioridadAcis", DATA_ACIS);
 
   const search = document.getElementById("prioridadAcisSearchInput").value.toLowerCase();
   const region = document.getElementById("prioridadAcisRegionSelect").value;
-  const cd = document.getElementById("prioridadAcisCdSelect").value;
+  const agencia = document.getElementById("prioridadAcisAgenciaSelect").value;
   const estado = document.getElementById("prioridadAcisEstadoSelect").value;
 
-  const filtered = filtrarAcisPorEstado_(filtrarAcisPorTexto_(DATA_ACIS, search, region, cd), estado);
+  const filtered = filtrarAcisPorEstado_(filtrarAcisPorTexto_(DATA_ACIS, search, region, agencia), estado);
 
   pintarAcisKpis_("prioridadAcis", computeAcisKpis_(filtered));
   updateAcisPrioritySummary(filtered);
@@ -918,8 +918,8 @@ function getRegionSummaryAcis(rows) {
   return getAcisGroupSummary_(rows, "region", "Sin región");
 }
 
-function getCdSummaryAcis(rows) {
-  return getAcisGroupSummary_(rows, "cd", "Sin CD");
+function getAgenciaSummaryAcis(rows) {
+  return getAcisGroupSummary_(rows, "agencia", "Sin agencia");
 }
 
 function updateAcisGroupChart_(rows, targetId, summaryFn, field) {
@@ -964,15 +964,15 @@ function updateAcisRegionChart(rows) {
   updateAcisGroupChart_(rows, "regionAcisChart", getRegionSummaryAcis, "region");
 }
 
-function updateAcisCdChart(rows) {
-  updateAcisGroupChart_(rows, "cdAcisChart", getCdSummaryAcis, "cd");
+function updateAcisAgenciaChart(rows) {
+  updateAcisGroupChart_(rows, "agenciaAcisChart", getAgenciaSummaryAcis, "agencia");
 }
 
 function updateAcisPrioritySummary(rows) {
   updateAcisStatusDonut(rows);
   updateAcisPriorityList(rows);
   updateAcisRegionBrief(rows);
-  updateAcisCdBrief(rows);
+  updateAcisAgenciaBrief(rows);
 }
 
 function updateAcisStatusDonut(rows) {
@@ -1054,7 +1054,7 @@ function updateAcisPriorityList(rows) {
       + '<button class="priority-item" type="button" data-search="' + escapeHtml(r.nombre) + '" onclick="focusSearchAcis(this.dataset.search)">'
       + '<div>'
       + '<div class="priority-title">' + escapeHtml(r.nombre) + '</div>'
-      + '<div class="sub">' + escapeHtml(r.cd || "Sin CD") + ' &middot; ' + detalle + '</div>'
+      + '<div class="sub">' + escapeHtml(r.agencia || "Sin agencia") + ' &middot; ' + detalle + '</div>'
       + '<div class="mini-track"><div class="mini-fill ' + getAvanceClassAcis_(r.avance, r.avanceEsperado, r.reportes) + '" style="width:' + width + '%"></div></div>'
       + '</div>'
       + '<span class="status ' + item.status.className + '">' + item.status.label + '</span>'
@@ -1092,13 +1092,13 @@ function updateAcisRegionBrief(rows) {
   }).join("");
 }
 
-function updateAcisCdBrief(rows) {
-  const target = document.getElementById("acisCdBrief");
+function updateAcisAgenciaBrief(rows) {
+  const target = document.getElementById("acisAgenciaBrief");
 
   if (!target) return;
 
   const avanceEsperado = getAvanceEsperadoGlobal_(rows);
-  const resumen = getCdSummaryAcis(rows)
+  const resumen = getAgenciaSummaryAcis(rows)
     .sort((a, b) => {
       if (a.avance !== b.avance) return a.avance - b.avance;
       return b.sinReporte - a.sinReporte;
@@ -1106,7 +1106,7 @@ function updateAcisCdBrief(rows) {
     .slice(0, 5);
 
   if (!resumen.length) {
-    target.innerHTML = '<div class="empty compact">Sin CDs para mostrar</div>';
+    target.innerHTML = '<div class="empty compact">Sin agencias para mostrar</div>';
     return;
   }
 
@@ -1116,7 +1116,7 @@ function updateAcisCdBrief(rows) {
     return ''
       + '<div class="company-brief-row">'
       + '<div class="company-brief-top">'
-      + '<strong>' + escapeHtml(r.cd) + '</strong>'
+      + '<strong>' + escapeHtml(r.agencia) + '</strong>'
       + '<span>' + r.avance + '%</span>'
       + '</div>'
       + '<div class="mini-track"><div class="mini-fill ' + getAvanceClassAcis_(r.avance, avanceEsperado, r.reportes) + '" style="width:' + width + '%"></div></div>'
@@ -1197,7 +1197,7 @@ function updateAcisTable(rows) {
       + '<td data-label="Líder"><div class="name">' + escapeHtml(r.nombre) + '</div><div class="sub mobile-detail">QR: ' + escapeHtml(r.qr || "-") + '</div></td>'
       + '<td data-label="Cargo" class="mobile-detail">' + escapeHtml(r.cargo) + '</td>'
       + '<td data-label="Región" class="mobile-detail"><span class="tag">' + escapeHtml(r.region || "Sin región") + '</span></td>'
-      + '<td data-label="CD">' + escapeHtml(r.cd) + '</td>'
+      + '<td data-label="Agencia">' + escapeHtml(r.agencia) + '</td>'
       + '<td data-label="Reportes" class="num">' + r.reportes + '</td>'
       + '<td data-label="Meta" class="num">' + r.meta + '</td>'
       + '<td data-label="Avance" class="mobile-full">'
@@ -1249,14 +1249,14 @@ function getAvanceClassAcis_(avance, avanceEsperado, reporte) {
 }
 
 function renderRiesgos() {
-  sincronizarCdSelect_("riesgos", DATA_ACIS);
+  sincronizarAgenciaSelect_("riesgos", DATA_ACIS);
 
   const search = document.getElementById("riesgosSearchInput").value.toLowerCase();
   const region = document.getElementById("riesgosRegionSelect").value;
-  const cd = document.getElementById("riesgosCdSelect").value;
+  const agencia = document.getElementById("riesgosAgenciaSelect").value;
   const estado = document.getElementById("riesgosEstadoSelect").value;
 
-  const filtered = filtrarAcisPorEstado_(filtrarAcisPorTexto_(DATA_ACIS, search, region, cd), estado);
+  const filtered = filtrarAcisPorEstado_(filtrarAcisPorTexto_(DATA_ACIS, search, region, agencia), estado);
 
   updateRiesgosKpis(filtered);
   updateRiesgosClasificacionChart(filtered);

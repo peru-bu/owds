@@ -36,7 +36,7 @@
             <span class="sidebar-group-chevron">▾</span>
           </button>
           <button type="button" class="sidebar-link active" data-view="collaboratorsView" onclick="showView('collaboratorsView', this)">Líderes</button>
-          <button type="button" class="sidebar-link" data-view="regionView" onclick="showView('regionView', this)">Región y CD</button>
+          <button type="button" class="sidebar-link" data-view="regionView" onclick="showView('regionView', this)">Región y Agencia</button>
           <button type="button" class="sidebar-link" data-view="executiveView" onclick="showView('executiveView', this)">Prioridades</button>
           <button type="button" class="sidebar-link" data-view="matrizView" onclick="showView('matrizView', this)">Matriz proceso</button>
         </div>
@@ -47,7 +47,7 @@
             <span class="sidebar-group-chevron">▾</span>
           </button>
           <button type="button" class="sidebar-link" data-view="acisView" onclick="showView('acisView', this)">Líderes</button>
-          <button type="button" class="sidebar-link" data-view="regionAcisView" onclick="showView('regionAcisView', this)">Región y CD</button>
+          <button type="button" class="sidebar-link" data-view="regionAcisView" onclick="showView('regionAcisView', this)">Región y Agencia</button>
           <button type="button" class="sidebar-link" data-view="prioridadAcisView" onclick="showView('prioridadAcisView', this)">Prioridades</button>
           <button type="button" class="sidebar-link" data-view="riesgosView" onclick="showView('riesgosView', this)">Riesgos</button>
         </div>
@@ -132,8 +132,8 @@
             <option value="TODAS">Todas las regiones</option>
           </select>
 
-          <select class="select" id="cdSelect" onchange="render()" aria-label="Filtrar por CD">
-            <option value="TODAS">Todas las CDs</option>
+          <select class="select" id="agenciaSelect" onchange="render()" aria-label="Filtrar por agencia">
+            <option value="TODAS">Todas las agencias</option>
           </select>
 
           <select class="select" id="estadoSelect" onchange="render()" aria-label="Filtrar por estado de calidad">
@@ -154,7 +154,7 @@
                   <th>Líder</th>
                   <th>Cargo</th>
                   <th>Región</th>
-                  <th>CD</th>
+                  <th>Agencia</th>
                   <th>Ejecutadas</th>
                   <th>Válidas</th>
                   <th>Repetición</th>
@@ -173,7 +173,7 @@
           <section class="hero" style="margin-bottom: 20px;">
             <div class="hero-top">
               <div>
-                <div class="section-kicker">Región y CD</div>
+                <div class="section-kicker">Región y Agencia</div>
                 <h1 class="title" style="font-size: 22px;">Reporte de Calidad OWDS por Líder</h1>
                 <div class="subtitle" id="regionViewSubtitleText">Cargando...</div>
               </div>
@@ -236,8 +236,8 @@
               <option value="TODAS">Todas las regiones</option>
             </select>
 
-            <select class="select" id="regionViewCdSelect" onchange="renderRegionView()" aria-label="Filtrar por CD">
-              <option value="TODAS">Todas las CDs</option>
+            <select class="select" id="regionViewAgenciaSelect" onchange="renderRegionView()" aria-label="Filtrar por agencia">
+              <option value="TODAS">Todas las agencias</option>
             </select>
 
             <select class="select" id="regionViewEstadoSelect" onchange="renderRegionView()" aria-label="Filtrar por estado de calidad">
@@ -254,10 +254,10 @@
             <div id="regionChart"></div>
           </section>
 
-          <div class="section-title">Calidad por CD</div>
+          <div class="section-title">Calidad por agencia</div>
 
           <section class="chart-card">
-            <div id="cdChart"></div>
+            <div id="agenciaChart"></div>
           </section>
         </section>
 
@@ -328,8 +328,8 @@
               <option value="TODAS">Todas las regiones</option>
             </select>
 
-            <select class="select" id="executiveViewCdSelect" onchange="renderExecutiveView()" aria-label="Filtrar por CD">
-              <option value="TODAS">Todas las CDs</option>
+            <select class="select" id="executiveViewAgenciaSelect" onchange="renderExecutiveView()" aria-label="Filtrar por agencia">
+              <option value="TODAS">Todas las agencias</option>
             </select>
 
             <select class="select" id="executiveViewEstadoSelect" onchange="renderExecutiveView()" aria-label="Filtrar por estado de calidad">
@@ -378,11 +378,11 @@
             <article class="insight-card">
               <div class="insight-head">
                 <div>
-                  <div class="section-kicker">CDs</div>
+                  <div class="section-kicker">Agencias</div>
                   <h2>Calidad y excedentes</h2>
                 </div>
               </div>
-              <div class="company-brief" id="cdBrief"></div>
+              <div class="company-brief" id="agenciaBrief"></div>
             </article>
           </section>
         </section>
@@ -454,8 +454,8 @@
               <option value="TODAS">Todas las regiones</option>
             </select>
 
-            <select class="select" id="matrizViewCdSelect" onchange="renderMatrizView()" aria-label="Filtrar por CD">
-              <option value="TODAS">Todas las CDs</option>
+            <select class="select" id="matrizViewAgenciaSelect" onchange="renderMatrizView()" aria-label="Filtrar por agencia">
+              <option value="TODAS">Todas las agencias</option>
             </select>
 
             <select class="select" id="matrizViewEstadoSelect" onchange="renderMatrizView()" aria-label="Filtrar por estado de calidad">
@@ -535,8 +535,8 @@
               <option value="TODAS">Todas las regiones</option>
             </select>
 
-            <select class="select" id="acisCdSelect" onchange="renderAcis()" aria-label="Filtrar por CD">
-              <option value="TODAS">Todas las CDs</option>
+            <select class="select" id="acisAgenciaSelect" onchange="renderAcis()" aria-label="Filtrar por agencia">
+              <option value="TODAS">Todas las agencias</option>
             </select>
 
             <select class="select" id="acisEstadoSelect" onchange="renderAcis()" aria-label="Filtrar por estado">
@@ -557,7 +557,7 @@
                     <th>Líder</th>
                     <th>Cargo</th>
                     <th>Región</th>
-                    <th>CD</th>
+                    <th>Agencia</th>
                     <th>Reportes</th>
                     <th>Meta</th>
                     <th>Avance</th>
@@ -574,7 +574,7 @@
           <section class="hero" style="margin-bottom: 20px;">
             <div class="hero-top">
               <div>
-                <div class="section-kicker">Región y CD</div>
+                <div class="section-kicker">Región y Agencia</div>
                 <h1 class="title" style="font-size: 22px;">Reporte de Cumplimiento ACIS por Líder</h1>
                 <div class="subtitle" id="regionAcisSubtitleText">Cargando...</div>
               </div>
@@ -627,8 +627,8 @@
               <option value="TODAS">Todas las regiones</option>
             </select>
 
-            <select class="select" id="regionAcisCdSelect" onchange="renderRegionAcis()" aria-label="Filtrar por CD">
-              <option value="TODAS">Todas las CDs</option>
+            <select class="select" id="regionAcisAgenciaSelect" onchange="renderRegionAcis()" aria-label="Filtrar por agencia">
+              <option value="TODAS">Todas las agencias</option>
             </select>
 
             <select class="select" id="regionAcisEstadoSelect" onchange="renderRegionAcis()" aria-label="Filtrar por estado">
@@ -647,10 +647,10 @@
             <div id="regionAcisChart"></div>
           </section>
 
-          <div class="section-title">Avance ACIS por CD</div>
+          <div class="section-title">Avance ACIS por agencia</div>
 
           <section class="chart-card">
-            <div id="cdAcisChart"></div>
+            <div id="agenciaAcisChart"></div>
           </section>
         </section>
 
@@ -711,8 +711,8 @@
               <option value="TODAS">Todas las regiones</option>
             </select>
 
-            <select class="select" id="prioridadAcisCdSelect" onchange="renderPrioridadAcis()" aria-label="Filtrar por CD">
-              <option value="TODAS">Todas las CDs</option>
+            <select class="select" id="prioridadAcisAgenciaSelect" onchange="renderPrioridadAcis()" aria-label="Filtrar por agencia">
+              <option value="TODAS">Todas las agencias</option>
             </select>
 
             <select class="select" id="prioridadAcisEstadoSelect" onchange="renderPrioridadAcis()" aria-label="Filtrar por estado">
@@ -763,11 +763,11 @@
             <article class="insight-card">
               <div class="insight-head">
                 <div>
-                  <div class="section-kicker">CDs</div>
+                  <div class="section-kicker">Agencias</div>
                   <h2>Avance ACIS</h2>
                 </div>
               </div>
-              <div class="company-brief" id="acisCdBrief"></div>
+              <div class="company-brief" id="acisAgenciaBrief"></div>
             </article>
           </section>
         </section>
@@ -829,8 +829,8 @@
               <option value="TODAS">Todas las regiones</option>
             </select>
 
-            <select class="select" id="riesgosCdSelect" onchange="renderRiesgos()" aria-label="Filtrar por CD">
-              <option value="TODAS">Todas las CDs</option>
+            <select class="select" id="riesgosAgenciaSelect" onchange="renderRiesgos()" aria-label="Filtrar por agencia">
+              <option value="TODAS">Todas las agencias</option>
             </select>
 
             <select class="select" id="riesgosEstadoSelect" onchange="renderRiesgos()" aria-label="Filtrar por estado">
