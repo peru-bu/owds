@@ -1,4 +1,4 @@
-const EXEC_URL = "https://script.google.com/macros/s/AKfycbyAqvhpj1EQIGHsPpbEXNPZUCpICbcP6v6kfXro5chDX8AFt3S5hVyeXvnijxMGy8pmmg/exec";
+const EXEC_URL = "https://api.iniciativasdpo.com/api/v1/publico/reporte";
 
 let DATA = [];
 let currentRows = [];
@@ -38,7 +38,7 @@ function inicializarTema_() {
 inicializarTema_();
 
 function cargarDatos() {
-  fetch(EXEC_URL + "?formato=json")
+  fetch(EXEC_URL)
     .then(resp => resp.json())
     .then(payload => {
       if (!payload.ok) {
@@ -403,11 +403,11 @@ function updateTable(rows) {
 
       + '<td data-label="Cargo" class="mobile-detail">' + escapeHtml(r.cargo) + '</td>'
 
-      + '<td data-label="Región">'
+      + '<td data-label="Región" class="mobile-detail">'
       + '<span class="tag">' + escapeHtml(r.region || "Sin región") + '</span>'
       + '</td>'
 
-      + '<td data-label="CD" class="mobile-detail">' + escapeHtml(r.cd) + '</td>'
+      + '<td data-label="CD">' + escapeHtml(r.cd) + '</td>'
 
       + '<td data-label="Ejecutadas" class="num">' + r.ejecutadas + '</td>'
 
@@ -427,7 +427,7 @@ function updateTable(rows) {
       + '<div class="sub">' + r.validas + '/' + r.ejecutadas + ' válidas</div>'
       + '</td>'
 
-      + '<td data-label="Estado">'
+      + '<td data-label="Estado" class="mobile-full">'
       + '<span class="status ' + status.className + '">' + status.label + '</span>'
       + '</td>'
 
@@ -1172,8 +1172,8 @@ function updateAcisTable(rows) {
       + '<tr class="detail-row" onclick="toggleMobileRow(this)">'
       + '<td data-label="Líder"><div class="name">' + escapeHtml(r.nombre) + '</div><div class="sub mobile-detail">QR: ' + escapeHtml(r.qr || "-") + '</div></td>'
       + '<td data-label="Cargo" class="mobile-detail">' + escapeHtml(r.cargo) + '</td>'
-      + '<td data-label="Región"><span class="tag">' + escapeHtml(r.region || "Sin región") + '</span></td>'
-      + '<td data-label="CD" class="mobile-detail">' + escapeHtml(r.cd) + '</td>'
+      + '<td data-label="Región" class="mobile-detail"><span class="tag">' + escapeHtml(r.region || "Sin región") + '</span></td>'
+      + '<td data-label="CD">' + escapeHtml(r.cd) + '</td>'
       + '<td data-label="Reportes" class="num">' + r.reportes + '</td>'
       + '<td data-label="Meta" class="num">' + r.meta + '</td>'
       + '<td data-label="Avance" class="mobile-full">'
@@ -1181,7 +1181,7 @@ function updateAcisTable(rows) {
       + '<div class="progress"><div class="progress-fill ' + avanceClass + '" style="width:' + barWidth + '%"></div></div>'
       + '<div class="sub">' + r.reportes + '/' + r.meta + ' reportes</div>'
       + '</td>'
-      + '<td data-label="Estado"><span class="status ' + status.className + '">' + status.label + '</span></td>'
+      + '<td data-label="Estado" class="mobile-full"><span class="status ' + status.className + '">' + status.label + '</span></td>'
       + '</tr>';
   }).join("");
 }
