@@ -1,4 +1,4 @@
-const EXEC_URL = "https://api.iniciativasdpo.com/api/v1/publico/reporte";
+const EXEC_URL = "https://owds-proxy.iniciativasdpo.workers.dev";
 
 let DATA = [];
 let currentRows = [];
